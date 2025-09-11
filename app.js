@@ -4,6 +4,40 @@ const END_HOUR = 21;    // 日历结束小时
 const SLOT_MINUTES = 30; // 时间栅格分钟数
 const TERM_ANCHOR_STR = '2025-09-20'; // 第一周锚点（周次从此日所在周计为第1周）
 
+// 学分映射（课程代码 -> 学分）
+const CODE_TO_CREDIT = {
+	FL6001: 2,
+	GE6001: 1,
+	MARX6001: 2,
+	MARX6003: 1,
+	MEM6001: 3,
+	MEM6002: 2,
+	MEM6003: 2,
+	MEM6005: 2,
+	MEM6006: 2,
+	GE6012: 2,
+	MEM6301: 2,
+	MEM6302: 2,
+	MEM6303: 2,
+	MEM6304: 2,
+	MEM6305: 2,
+	MEM6306: 2,
+	MEM6307: 2,
+	MEM6308: 1,
+	MEM6309: 2,
+	MEM6310: 2,
+	MEM6311: 2,
+	MEM8301: 2,
+	MEM8302: 2,
+	MEM8303: 2,
+	MEM8304: 2,
+	MEM8305: 2,
+	MEM8306: 2,
+	MEM8307: 2,
+	MEM8308: 2,
+	MEM8309: 2,
+};
+
 // Excel 固化数据：示例结构。若你提供真实字段名，可替换。
 // 字段：id, name, weekday(1-7, 周一为1), startTime("HH:mm"), endTime("HH:mm"), teacher, room
 const COURSES = [
@@ -109,6 +143,7 @@ const nextWeekBtn = document.getElementById('nextWeekBtn');
 const reloadBtn = document.getElementById('reloadBtn');
 const fileInputEl = document.getElementById('fileInput');
 const mappingHintEl = document.getElementById('mappingHint');
+const creditTotalEl = document.getElementById('creditTotal');
 
 /* 渲染：日历栅格 */
 function renderCalendarGrid() {
@@ -153,6 +188,33 @@ function renderCalendarGrid() {
 	}
 }
 
+function groupOverlaps(courses) {
+	// 输入：同一天且属于当前周的课程数组（已按开始时间排序）
+	// 输出：若互相有重叠则放入同一组
+	const groups = [];
+	let current = [];
+	let currentEnd = -1;
+	for (const c of courses) {
+		const s = minutesSinceStart(c.startTime);
+		const e = minutesSinceStart(c.endTime);
+		if (current.length === 0) {
+			current.push(c);
+			currentEnd = e;
+			continue;
+		}
+		if (s < currentEnd) {
+			current.push(c);
+			currentEnd = Math.max(currentEnd, e);
+		} else {
+			groups.push(current);
+			current = [c];
+			currentEnd = e;
+		}
+	}
+	if (current.length) groups.push(current);
+	return groups;
+}
+
 /* 渲染：已选课程到日历 */
 function renderEvents() {
 	// 清理旧事件
@@ -160,57 +222,60 @@ function renderEvents() {
 	oldEvents.forEach(e => e.remove());
 
 	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id) && isCourseInWeek(c, state.currentWeekNo));
-	// 冲突检测：同一 weekday 时间区间重叠
+	// 按天分组
 	const byDay = new Map();
 	for (const c of selectedCourses) {
 		if (!byDay.has(c.weekday)) byDay.set(c.weekday, []);
 		byDay.get(c.weekday).push(c);
 	}
-	const conflictIds = new Set();
-	for (const [day, arr] of byDay) {
+	for (const [dayIndex, arr] of byDay) {
 		arr.sort((a,b) => minutesSinceStart(a.startTime) - minutesSinceStart(b.startTime));
-		for (let i = 0; i < arr.length; i++) {
-			for (let j = i + 1; j < arr.length; j++) {
-				const a1 = minutesSinceStart(arr[i].startTime);
-				const a2 = minutesSinceStart(arr[i].endTime);
-				const b1 = minutesSinceStart(arr[j].startTime);
-				const b2 = minutesSinceStart(arr[j].endTime);
-				if (Math.max(a1, b1) < Math.min(a2, b2)) {
-					conflictIds.add(arr[i].id);
-					conflictIds.add(arr[j].id);
-				}
+		const groups = groupOverlaps(arr);
+		for (const group of groups) {
+			// 计算组的范围
+			let minStart = Infinity;
+			let maxEnd = -Infinity;
+			for (const c of group) {
+				minStart = Math.min(minStart, minutesSinceStart(c.startTime));
+				maxEnd = Math.max(maxEnd, minutesSinceStart(c.endTime));
 			}
+			const firstCell = calendarEl.querySelector(`.cell[data-day="${dayIndex}"][data-slot="0"]`);
+			if (!firstCell) continue;
+			const columnLeft = firstCell.offsetLeft;
+			const columnWidth = firstCell.clientWidth;
+			const baseTop = firstCell.offsetTop; // slot=0 顶部
+			const slotHeight = firstCell.clientHeight || 28;
+
+			const top = baseTop + (minStart / SLOT_MINUTES) * slotHeight;
+			const height = Math.max(20, ((maxEnd - minStart) / SLOT_MINUTES) * slotHeight);
+
+			const block = document.createElement('div');
+			block.className = 'event' + (group.length > 1 ? ' conflict group' : '');
+			block.style.top = `${top}px`;
+			block.style.left = `${columnLeft + 2}px`;
+			block.style.width = `${Math.max(20, columnWidth - 4)}px`;
+			block.style.height = `${height}px`;
+
+			if (group.length === 1) {
+				const c = group[0];
+				block.innerHTML = `
+					<div class="title">${c.name}</div>
+					<div class="meta">${formatTimeRange(c.startTime, c.endTime)} · 第${state.currentWeekNo}周 · ${c.room || ''} · ${c.teacher || ''}</div>
+				`;
+			} else {
+				const items = group.map(c => `
+					<div class="conf-item">
+						<div class="conf-title">${c.name}</div>
+						<div class="conf-meta">${formatTimeRange(c.startTime, c.endTime)} · ${c.room || ''} · ${c.teacher || ''}</div>
+					</div>
+				`).join('');
+				block.innerHTML = `
+					<div class="title">时间冲突（${group.length}） · 第${state.currentWeekNo}周</div>
+					<div class="conf-list">${items}</div>
+				`;
+			}
+			calendarEl.appendChild(block);
 		}
-	}
-
-	// 绘制块（绝对定位在日历容器内，贴合对应列与时段）
-	for (const c of selectedCourses) {
-		const startMin = minutesSinceStart(c.startTime);
-		const endMin = minutesSinceStart(c.endTime);
-
-		const dayIndex = c.weekday; // 1..7
-		const firstCell = calendarEl.querySelector(`.cell[data-day="${dayIndex}"][data-slot="0"]`);
-		if (!firstCell) continue;
-
-		const columnLeft = firstCell.offsetLeft;
-		const columnWidth = firstCell.clientWidth;
-		const baseTop = firstCell.offsetTop; // slot=0 顶部
-		const slotHeight = firstCell.clientHeight || 28;
-
-		const top = baseTop + (startMin / SLOT_MINUTES) * slotHeight;
-		const height = Math.max(20, ((endMin - startMin) / SLOT_MINUTES) * slotHeight);
-
-		const block = document.createElement('div');
-		block.className = 'event' + (conflictIds.has(c.id) ? ' conflict' : '');
-		block.style.top = `${top}px`;
-		block.style.left = `${columnLeft + 2}px`;
-		block.style.width = `${Math.max(20, columnWidth - 4)}px`;
-		block.style.height = `${height}px`;
-		block.innerHTML = `
-			<div class="title">${c.name}</div>
-			<div class="meta">${formatTimeRange(c.startTime, c.endTime)} · 第${state.currentWeekNo}周 · ${c.room || ''} · ${c.teacher || ''}</div>
-		`;
-		calendarEl.appendChild(block);
 	}
 }
 
@@ -220,10 +285,11 @@ function renderCourseList() {
 		const checked = state.selectedIds.has(c.id) ? 'checked' : '';
 		const inThisWeek = isCourseInWeek(c, state.currentWeekNo);
 		const weeksText = escapeHtml(c.weeks || '') + (inThisWeek ? '（本周）' : '');
+		const credit = CODE_TO_CREDIT[c.code] ?? c.credit ?? '';
 		return `
 			<tr>
 				<td><input type="checkbox" data-id="${c.id}" ${checked}></td>
-				<td>${escapeHtml(c.name)}</td>
+				<td>${escapeHtml(c.name)}<div style="font-size:12px;color:#6b7280;">${escapeHtml(c.code || '')} · 学分：${credit}</div></td>
 				<td>${weekdayLabel(c.weekday)}</td>
 				<td>${c.startTime}</td>
 				<td>${c.endTime}</td>
@@ -234,6 +300,7 @@ function renderCourseList() {
 		`;
 	}).join('');
 	courseTbodyEl.innerHTML = rows || `<tr><td colspan="8" style="text-align:center;color:#9ca3af;">无结果</td></tr>`;
+	updateSelectedCredit();
 }
 
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
@@ -246,6 +313,17 @@ function applyFilter() {
 	state.filteredCourses = COURSES.filter(c => {
 		return [c.name, c.teacher, c.room].some(v => String(v||'').toLowerCase().includes(kw));
 	});
+}
+
+function updateSelectedCredit() {
+	let total = 0;
+	for (const id of state.selectedIds) {
+		const c = COURSES.find(x => x.id === id);
+		if (!c) continue;
+		const credit = CODE_TO_CREDIT[c.code] ?? c.credit ?? 0;
+		total += Number(credit) || 0;
+	}
+	if (creditTotalEl) creditTotalEl.textContent = String(total);
 }
 
 /* 事件绑定 */
@@ -261,12 +339,14 @@ function bindEvents() {
 			const id = Number(t.dataset.id);
 			if (t.checked) state.selectedIds.add(id); else state.selectedIds.delete(id);
 			renderEvents();
+			updateSelectedCredit();
 		}
 	});
 	clearSelectionBtn.addEventListener('click', () => {
 		state.selectedIds.clear();
 		renderCourseList();
 		renderEvents();
+		updateSelectedCredit();
 	});
 	prevWeekBtn.addEventListener('click', () => {
 		state.currentWeekNo = Math.max(1, state.currentWeekNo - 1);
@@ -274,6 +354,7 @@ function bindEvents() {
 		updateWeekTitle();
 		renderCalendarGrid();
 		renderEvents();
+		updateSelectedCredit();
 	});
 	nextWeekBtn.addEventListener('click', () => {
 		state.currentWeekNo = state.currentWeekNo + 1;
@@ -281,20 +362,19 @@ function bindEvents() {
 		updateWeekTitle();
 		renderCalendarGrid();
 		renderEvents();
+		updateSelectedCredit();
 	});
 	reloadBtn.addEventListener('click', () => {
-		// 已固化数据，这里仅刷新视图
 		applyFilter();
 		renderCourseList();
 		renderEvents();
+		updateSelectedCredit();
 	});
 	fileInputEl.addEventListener('change', () => {
-		// 支持用户后续替换本地 Excel（可选），此处留空或后续扩展
 		mappingHintEl.hidden = false;
 		mappingHintEl.textContent = '当前版本已将 Excel 固化到前端。如需替换，请联系开发或在此扩展解析逻辑。';
 	});
 	window.addEventListener('resize', () => {
-		// 视窗变化导致列宽/高度变化，重新定位事件块
 		renderEvents();
 	});
 }
@@ -307,7 +387,10 @@ function updateWeekTitle() {
 
 /* 初始化 */
 function init() {
-	// 将起始周设为学期第1周
+	// 将 COURSES 的学分用映射覆盖
+	for (const c of COURSES) {
+		if (c.code && CODE_TO_CREDIT[c.code] != null) c.credit = CODE_TO_CREDIT[c.code];
+	}
 	state.currentWeekNo = 1;
 	state.currentWeekStart = getWeekStartByNo(state.currentWeekNo);
 	updateWeekTitle();
@@ -316,6 +399,7 @@ function init() {
 	renderCourseList();
 	renderEvents();
 	bindEvents();
+	updateSelectedCredit();
 }
 
 document.addEventListener('DOMContentLoaded', init); 

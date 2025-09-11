@@ -80,8 +80,15 @@ body {
 	overflow: hidden;
 }
 .event.conflict { background: #fee2e2; border-color: #fca5a5; }
-.event .title { font-weight: 600; margin-bottom: 2px; }
+.event .title { font-weight: 600; margin-bottom: 4px; }
 .event .meta { color: #374151; opacity: 0.9; }
+
+/* 冲突合并卡片内部 */
+.event.group { display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+.event .conf-list { display: flex; flex-direction: column; gap: 6px; }
+.event .conf-item { background: rgba(255,255,255,0.6); border: 1px dashed #fca5a5; border-radius: 4px; padding: 6px; }
+.event .conf-title { font-weight: 600; margin-bottom: 2px; }
+.event .conf-meta { color: #374151; opacity: 0.9; }
 
 .list-section {
 	background: #ffffff;
@@ -89,7 +96,7 @@ body {
 	border-radius: 8px;
 	padding: 12px;
 }
-.list-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.list-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; justify-content: space-between; }
 .list-toolbar input[type="search"] { padding: 6px 8px; width: 280px; }
 
 .course-table { width: 100%; border-collapse: collapse; }
