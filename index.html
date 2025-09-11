@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>选课系统</title>
+	<link rel="stylesheet" href="./styles.css" />
+	<!-- dayjs -->
+	<script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/dayjs@1/locale/zh-cn.js"></script>
+	<script>dayjs.locale('zh-cn');</script>
+	<!-- xlsx -->
+	<script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.2/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+	<header class="page-header">
+		<h1>选课系统</h1>
+		<div class="actions">
+			<button id="reloadBtn" type="button">重新加载 Excel</button>
+			<label class="file-picker">
+				<span>或选择本地 Excel</span>
+				<input id="fileInput" type="file" accept=".xlsx,.xls" />
+			</label>
+		</div>
+	</header>
+
+	<main class="layout">
+		<section class="calendar-section">
+			<div class="calendar-header">
+				<button id="prevWeekBtn" class="nav-btn" type="button">‹ 上周</button>
+				<div id="weekTitle" class="week-title"></div>
+				<button id="nextWeekBtn" class="nav-btn" type="button">下周 ›</button>
+			</div>
+			<div id="calendar" class="calendar"></div>
+			<div class="calendar-legend">
+				<span class="legend-item legend-free">空闲</span>
+				<span class="legend-item legend-selected">已选</span>
+				<span class="legend-item legend-conflict">冲突</span>
+			</div>
+		</section>
+
+		<section class="list-section">
+			<div class="list-toolbar">
+				<input id="searchInput" type="search" placeholder="搜索课程/老师/教室" />
+				<button id="clearSelectionBtn" type="button">清空已选</button>
+			</div>
+			<div id="mappingHint" class="mapping-hint" hidden></div>
+			<table class="course-table">
+				<thead>
+					<tr>
+						<th style="width:48px;">选</th>
+						<th>课程名</th>
+						<th>星期</th>
+						<th>开始</th>
+						<th>结束</th>
+						<th>老师</th>
+						<th>教室</th>
+						<th>周次</th>
+					</tr>
+				</thead>
+				<tbody id="courseTbody"></tbody>
+			</table>
+		</section>
+	</main>
+
+	<footer class="page-footer">
+		<span>数据源：当前目录下的 25级25秋季课程安排信息.xlsx</span>
+	</footer>
+
+	<script src="./app.js"></script>
+</body>
+</html> 
