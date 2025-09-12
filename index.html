@@ -25,16 +25,24 @@
 			<div class="calendar-legend">
 				<span class="legend-item legend-free">空闲</span>
 				<span class="legend-item legend-selected">已选</span>
+				<span class="legend-item legend-required">必修</span>
+				<span class="legend-item legend-gpa">计入GPA</span>
+				<span class="legend-item legend-non-gpa">不计GPA</span>
 				<span class="legend-item legend-conflict">冲突</span>
 			</div>
 		</section>
 
 		<section class="list-section">
 			<div class="list-toolbar">
-				<input id="searchInput" type="search" placeholder="搜索课程/老师/教室" />
+                <label for="searchInput"></label><input id="searchInput" type="search" placeholder="搜索课程/老师/教室" />
 				<button id="clearSelectionBtn" type="button">清空已选</button>
+				<button id="exportBtn" type="button">导出选课</button>
+				<button id="importBtn" type="button">导入选课</button>
+				<input id="importFileInput" type="file" accept=".json" style="display: none;" />
 				<div class="actions">
 					<span id="creditTotalWrap">已选学分：<strong id="creditTotal">0</strong></span>
+					<span id="requiredProgressWrap" style="margin-left:16px;">核心必修：<strong id="requiredProgress">0/3</strong></span>
+					<span id="gpaWrap" style="margin-left:16px;">GPA学分：<strong id="gpaDisplay">0</strong></span>
 				</div>
 			</div>
 			<div id="mappingHint" class="mapping-hint" hidden></div>

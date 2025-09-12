@@ -50,11 +50,14 @@ body {
 	background: #e5e7eb;
 }
 .legend-selected::before { background: #60a5fa; }
+.legend-required::before { background: #f59e0b; }
+.legend-gpa::before { background: #059669; }
+.legend-non-gpa::before { background: #6b7280; }
 .legend-conflict::before { background: #f87171; }
 
 .calendar {
 	display: grid;
-	grid-template-columns: 80px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px; /* 时间列80px + 36个课程列各180px */
+	grid-template-columns: 80px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px; /* 时间列80px + 36个课程列各220px */
 	border-top: 1px solid #e5e7eb;
 	border-left: 1px solid #e5e7eb;
 	overflow: visible; /* 去掉滚动条 */
@@ -68,7 +71,7 @@ body {
 	min-height: 200px; /* 增加高度以容纳课程信息 */
 }
 .calendar .cell {
-	width: 180px; /* 课程列固定宽度 */
+	width: 220px; /* 课程列固定宽度 */
 }
 .calendar .time-col {
 	width: 80px; /* 时间列固定宽度 */
@@ -84,7 +87,7 @@ body {
 	z-index: 2; 
 	font-size: 11px; 
 	line-height: 1.2;
-	width: 180px; /* 课程列固定宽度 */
+	width: 220px; /* 课程列固定宽度 */
 }
 
 .event {
@@ -123,6 +126,22 @@ body {
 .course-table thead th { background: #fafafa; }
 .course-table tbody tr:hover { background: #f9fafb; }
 
+/* 固定代码列宽度 */
+.course-table th:nth-child(2), .course-table td:nth-child(2) { 
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+}
+
 .mapping-hint { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
 
-button { cursor: pointer; } 
+button { cursor: pointer; }
+
+/* 日历中的取消选择按钮 */
+.unselect-btn:hover {
+    background: rgba(239, 68, 68, 0.2) !important;
+    color: #dc2626 !important;
+} 
