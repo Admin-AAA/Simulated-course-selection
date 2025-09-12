@@ -694,20 +694,27 @@ function downloadScheduleImage() {
 	for (let week = 1; week <= weekCount; week++) {
 		const x = timeColWidth + (week - 1) * cellWidth;
 		
+		// 计算该周的实际日期
+		const weekStart = getWeekStartByNo(week);
+		const satDate = dayjs(weekStart).add(4, 'day'); // 周六
+		const sunDate = dayjs(weekStart).add(5, 'day'); // 周日
+		
 		// 周六表头
 		ctx.fillStyle = '#fafafa';
 		ctx.fillRect(x, startY, cellWidth, cellHeight / 2);
 		ctx.strokeRect(x, startY, cellWidth, cellHeight / 2);
 		ctx.fillStyle = '#1f2937';
-		ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-		ctx.fillText(`第${week}周 周六`, x + cellWidth / 2, startY + 10);
+		ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+		ctx.fillText(`第${week}周`, x + cellWidth / 2, startY + 5);
+		ctx.fillText(`${satDate.format('M/DD')} 周六`, x + cellWidth / 2, startY + 17);
 		
 		// 周日表头
 		ctx.fillStyle = '#fafafa';
 		ctx.fillRect(x, startY + cellHeight / 2, cellWidth, cellHeight / 2);
 		ctx.strokeRect(x, startY + cellHeight / 2, cellWidth, cellHeight / 2);
 		ctx.fillStyle = '#1f2937';
-		ctx.fillText(`第${week}周 周日`, x + cellWidth / 2, startY + cellHeight / 2 + 10);
+		ctx.fillText(`第${week}周`, x + cellWidth / 2, startY + cellHeight / 2 + 5);
+		ctx.fillText(`${sunDate.format('M/DD')} 周日`, x + cellWidth / 2, startY + cellHeight / 2 + 17);
 	}
 	
 	// 绘制时间段
