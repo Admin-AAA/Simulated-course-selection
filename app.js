@@ -313,40 +313,40 @@ function renderEvents() {
 				const requiredBadge = requiredGroup ? '<span style="background:#f59e0b;color:white;font-size:9px;padding:1px 4px;border-radius:4px;margin-left:4px;">必修</span>' : '';
 				const gpaBadge = c.gpa === true ? '<span style="background:#059669;color:white;font-size:9px;padding:1px 4px;border-radius:4px;margin-left:4px;">GPA</span>' : 
 								c.gpa === false ? '<span style="background:#6b7280;color:white;font-size:9px;padding:1px 4px;border-radius:4px;margin-left:4px;">非GPA</span>' : '';
-				
-				block.innerHTML = `
-					<div style="display:flex;justify-content:space-between;align-items:flex-start;">
-						<div style="flex:1;min-width:0;">
-							<div class="title" style="font-weight:600;margin-bottom:2px;">${escapeHtml(c.name)}${requiredBadge}${gpaBadge}</div>
-							<div class="meta" style="color:#374151;opacity:0.9;">${formatTimeRange(c.startTime, c.endTime)} · ${escapeHtml(c.room || '')} · ${escapeHtml(c.teacher || '')}</div>
-						</div>
-						<button class="unselect-btn" data-course-id="${c.id}" style="background:rgba(0,0,0,0.1);border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:#666;margin-left:4px;flex-shrink:0;" title="取消选择">×</button>
-					</div>
-				`;
-			} else {
-				const items = group.map(c => {
-					const requiredGroup = isRequiredCourse(c.code);
-					const requiredBadge = requiredGroup ? '<span style="background:#f59e0b;color:white;font-size:8px;padding:1px 3px;border-radius:3px;margin-left:3px;">必修</span>' : '';
-					const gpaBadge = c.gpa === true ? '<span style="background:#059669;color:white;font-size:8px;padding:1px 3px;border-radius:3px;margin-left:3px;">GPA</span>' : 
-									c.gpa === false ? '<span style="background:#6b7280;color:white;font-size:8px;padding:1px 3px;border-radius:3px;margin-left:3px;">非GPA</span>' : '';
-					
-					return `
-						<div class="conf-item" style="background:rgba(255,255,255,0.6);border:1px dashed #fca5a5;border-radius:2px;padding:2px;margin:1px 0;position:relative;">
-							<div style="display:flex;justify-content:space-between;align-items:flex-start;">
-								<div style="flex:1;min-width:0;">
-									<div class="conf-title" style="font-weight:600;margin-bottom:1px;">${escapeHtml(c.name)}${requiredBadge}${gpaBadge}</div>
-									<div class="conf-meta" style="color:#374151;opacity:0.9;">${formatTimeRange(c.startTime, c.endTime)} · ${escapeHtml(c.room || '')} · ${escapeHtml(c.teacher || '')}</div>
-								</div>
-								<button class="unselect-btn" data-course-id="${c.id}" style="background:rgba(0,0,0,0.1);border:none;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:#666;margin-left:4px;flex-shrink:0;" title="取消选择">×</button>
-							</div>
-						</div>
-					`;
-				}).join('');
-				block.innerHTML = `
-					<div class="title" style="font-weight:600;margin-bottom:2px;">时间冲突</div>
-					<div class="conf-list">${items}</div>
-				`;
-			}
+                // 添加课程代码显示
+                block.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div style="flex:1;min-width:0;">
+                            <div class="title" style="font-weight:600;margin-bottom:2px;">[${escapeHtml(c.code)}] ${escapeHtml(c.name)}${requiredBadge}${gpaBadge}</div>
+                            <div class="meta" style="color:#374151;opacity:0.9;">${formatTimeRange(c.startTime, c.endTime)} · ${escapeHtml(c.room || '')} · ${escapeHtml(c.teacher || '')}</div>
+                        </div>
+                        <button class="unselect-btn" data-course-id="${c.id}" style="background:rgba(0,0,0,0.1);border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:#666;margin-left:4px;flex-shrink:0;" title="取消选择">×</button>
+                    </div>
+                `;
+            } else {
+                const items = group.map(c => {
+                    const requiredGroup = isRequiredCourse(c.code);
+                    const requiredBadge = requiredGroup ? '<span style="background:#f59e0b;color:white;font-size:8px;padding:1px 3px;border-radius:3px;margin-left:3px;">必修</span>' : '';
+                    const gpaBadge = c.gpa === true ? '<span style="background:#059669;color:white;font-size:8px;padding:1px 3px;border-radius:3px;margin-left:3px;">GPA</span>' : 
+                                    c.gpa === false ? '<span style="background:#6b7280;color:white;font-size:8px;padding:1px 3px;border-radius:3px;margin-left:3px;">非GPA</span>' : '';
+                    // 添加课程代码显示
+                    return `
+                        <div class="conf-item" style="background:rgba(255,255,255,0.6);border:1px dashed #fca5a5;border-radius:2px;padding:2px;margin:1px 0;position:relative;">
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                                <div style="flex:1;min-width:0;">
+                                    <div class="conf-title" style="font-weight:600;margin-bottom:1px;">[${escapeHtml(c.code)}] ${escapeHtml(c.name)}${requiredBadge}${gpaBadge}</div>
+                                    <div class="conf-meta" style="color:#374151;opacity:0.9;">${formatTimeRange(c.startTime, c.endTime)} · ${escapeHtml(c.room || '')} · ${escapeHtml(c.teacher || '')}</div>
+                                </div>
+                                <button class="unselect-btn" data-course-id="${c.id}" style="background:rgba(0,0,0,0.1);border:none;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:#666;margin-left:4px;flex-shrink:0;" title="取消选择">×</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                block.innerHTML = `
+                    <div class="title" style="font-weight:600;margin-bottom:2px;">时间冲突</div>
+                    <div class="conf-list">${items}</div>
+                `;
+            }
 			cell.appendChild(block);
 		}
 	}
@@ -1046,4 +1046,4 @@ function init() {
 	}
 }
 
-document.addEventListener('DOMContentLoaded', init); 
+document.addEventListener('DOMContentLoaded', init);
