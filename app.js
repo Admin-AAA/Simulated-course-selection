@@ -364,14 +364,21 @@ function renderCourseList() {
 		const weeksText = escapeHtml(c.weeks || '') + (inThisWeek ? '（本周）' : '');
 		const credit = CODE_TO_CREDIT[c.code] ?? c.credit ?? '';
 		
-		// 检查是否为必修课程
+		// 检查是否为必修课程和冲突情况
 		const requiredGroup = isRequiredCourse(c.code);
-		let rowClass = !canSelect ? 'style="opacity:0.5;background:#f9f9f9;"' : '';
-		if (requiredGroup && canSelect) {
+		const hasConflict = wouldConflictWithSelected(c.id);
+		
+		let rowClass = '';
+		if (!canSelect) {
+			rowClass = 'style="opacity:0.5;background:#f9f9f9;"';
+		} else if (hasConflict) {
+			rowClass = 'style="opacity:0.6;background:#fee2e2;border-left:4px solid #dc2626;"'; // 红色背景表示冲突
+		} else if (requiredGroup) {
 			rowClass = 'style="background:#fef3c7;border-left:4px solid #f59e0b;"'; // 橙色背景表示必修
 		}
 		
 		const duplicateHint = !canSelect && selectedCodes.has(c.code) ? '<span style="color:#ef4444;font-size:11px;">（已选相同课程）</span>' : '';
+		const conflictHint = hasConflict ? '<span style="color:#dc2626;font-size:11px;font-weight:600;">（时间冲突）</span>' : '';
 		const requiredHint = requiredGroup ? `<span style="color:#f59e0b;font-size:11px;font-weight:600;">（${requiredGroup.description}）</span>` : '';
 		const gpaHint = c.gpa === true ? '<span style="color:#059669;font-size:11px;font-weight:600;">（计入GPA）</span>' : 
 						c.gpa === false ? '<span style="color:#6b7280;font-size:11px;">（不计GPA）</span>' : '';
@@ -379,7 +386,7 @@ function renderCourseList() {
 		return `
 			<tr ${rowClass}>
 				<td><input type="checkbox" data-id="${c.id}" ${checked} ${disabled}></td>
-				<td>${escapeHtml(c.code || '')}${duplicateHint}${requiredHint}${gpaHint}</td>
+				<td>${escapeHtml(c.code || '')}${duplicateHint}${conflictHint}${requiredHint}${gpaHint}</td>
 				<td>${escapeHtml(c.name)}<div style="font-size:12px;color:#6b7280;">学分：${credit}</div></td>
 				<td>${weekdayLabel(c.weekday)}</td>
 				<td>${formatTimeRange(c.startTime, c.endTime)}</td>
@@ -455,6 +462,54 @@ function canSelectCourse(courseId) {
 	
 	const selectedCodes = getSelectedCourseCodes();
 	return !selectedCodes.has(course.code);
+}
+
+function wouldConflictWithSelected(courseId) {
+	const course = COURSES.find(c => c.id === courseId);
+	if (!course) return false;
+	
+	// 如果课程已经被选择，不算冲突
+	if (state.selectedIds.has(courseId)) return false;
+	
+	// 只检查周末课程
+	if (course.weekday !== 6 && course.weekday !== 7) return false;
+	
+	const selectedCourses = COURSES.filter(c => 
+		state.selectedIds.has(c.id) && 
+		(c.weekday === 6 || c.weekday === 7)
+	);
+	
+	const courseWeeks = parseWeeks(course.weeks);
+	const courseSlot = getTimeSlot(course.startTime);
+	
+	// 检查是否与任何已选课程在时间上冲突
+	for (const selected of selectedCourses) {
+		if (selected.weekday === course.weekday) {
+			const selectedWeeks = parseWeeks(selected.weeks);
+			const selectedSlot = getTimeSlot(selected.startTime);
+			
+			// 检查是否有重叠的周次且时间段相同
+			const hasOverlapWeeks = [...courseWeeks].some(week => selectedWeeks.has(week));
+			
+			if (hasOverlapWeeks && selectedSlot === courseSlot) {
+				// 进一步检查实际时间是否重叠
+				if (timeRangesOverlap(course.startTime, course.endTime, selected.startTime, selected.endTime)) {
+					return true;
+				}
+			}
+		}
+	}
+	
+	return false;
+}
+
+function timeRangesOverlap(start1, end1, start2, end2) {
+	const start1Min = minutesSinceStart(start1);
+	const end1Min = minutesSinceStart(end1);
+	const start2Min = minutesSinceStart(start2);
+	const end2Min = minutesSinceStart(end2);
+	
+	return start1Min < end2Min && start2Min < end1Min;
 }
 
 function isRequiredCourse(courseCode) {
