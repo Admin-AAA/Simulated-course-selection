@@ -153,12 +153,12 @@ const importBtn = document.getElementById('importBtn');
 const importFileInputEl = document.getElementById('importFileInput');
 const prevWeekBtn = document.getElementById('prevWeekBtn');
 const nextWeekBtn = document.getElementById('nextWeekBtn');
-const reloadBtn = document.getElementById('reloadBtn');
-const fileInputEl = document.getElementById('fileInput');
+// Removed non-existent DOM element references
 const mappingHintEl = document.getElementById('mappingHint');
 const creditTotalEl = document.getElementById('creditTotal');
 const requiredProgressEl = document.getElementById('requiredProgress');
 const gpaDisplayEl = document.getElementById('gpaDisplay');
+const conflictDisplayEl = document.getElementById('conflictDisplay');
 
 /* 渲染：周末专用日历栅格 */
 function renderCalendarGrid() {
@@ -339,7 +339,7 @@ function renderEvents() {
 					`;
 				}).join('');
 				block.innerHTML = `
-					<div class="title" style="font-weight:600;margin-bottom:2px;">时间冲突（${group.length}）</div>
+					<div class="title" style="font-weight:600;margin-bottom:2px;">时间冲突</div>
 					<div class="conf-list">${items}</div>
 				`;
 			}
@@ -425,6 +425,15 @@ function updateSelectedCredit() {
 		gpaDisplayEl.textContent = String(gpaCredits);
 		gpaDisplayEl.style.color = gpaCredits > 0 ? '#059669' : '#6b7280';
 	}
+	
+	// 更新冲突显示
+	const conflictCount = calculateTotalConflicts();
+	if (conflictDisplayEl) {
+		conflictDisplayEl.textContent = String(conflictCount);
+		conflictDisplayEl.style.color = conflictCount > 0 ? '#dc2626' : '#6b7280';
+		// Debug log
+		console.log('Conflict count updated:', conflictCount);
+	}
 }
 
 function getSelectedCourseCodes() {
@@ -470,6 +479,38 @@ function calculateGPACredits() {
 		}
 	}
 	return gpaCredits;
+}
+
+function calculateTotalConflicts() {
+	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id) && (c.weekday === 6 || c.weekday === 7));
+	
+	// 按周×天×时段分组（考虑周次重叠）
+	const byWeekDaySlot = new Map();
+	
+	for (const c of selectedCourses) {
+		const weekSet = parseWeeks(c.weeks);
+		if (weekSet.size === 0) continue; // 跳过无周次信息的课程
+		
+		for (const weekNo of weekSet) {
+			const slot = getTimeSlot(c.startTime);
+			const key = `${weekNo}-${c.weekday}-${slot}`;
+			if (!byWeekDaySlot.has(key)) byWeekDaySlot.set(key, []);
+			byWeekDaySlot.get(key).push(c);
+		}
+	}
+
+	let conflictGroupCount = 0;
+	for (const [key, courses] of byWeekDaySlot) {
+		const groups = groupOverlaps(courses);
+
+		for (const group of groups) {
+			if (group.length > 1) {
+				conflictGroupCount++;
+			}
+		}
+	}
+
+	return conflictGroupCount;
 }
 
 /* 导入/导出功能 */
@@ -728,16 +769,7 @@ function bindEvents() {
 		renderEvents();
 		updateSelectedCredit();
 	});
-	reloadBtn.addEventListener('click', () => {
-		applyFilter();
-		renderCourseList();
-		renderEvents();
-		updateSelectedCredit();
-	});
-	fileInputEl.addEventListener('change', () => {
-		mappingHintEl.hidden = false;
-		mappingHintEl.textContent = '当前版本已将 Excel 固化到前端。如需替换，请联系开发或在此扩展解析逻辑。';
-	});
+	// Removed event listeners for non-existent DOM elements
 	window.addEventListener('resize', () => {
 		renderEvents();
 	});
