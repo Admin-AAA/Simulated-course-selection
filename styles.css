@@ -30,7 +30,8 @@ body {
 	border: 1px solid #e5e7eb;
 	border-radius: 8px;
 	padding: 12px;
-	overflow-x: auto; /* 确保水平滚动 */
+	overflow-x: auto; /* 保持水平滚动 */
+	overflow-y: visible; /* 去掉垂直滚动条 */
 }
 .calendar-header {
 	display: grid;
@@ -56,8 +57,7 @@ body {
 	grid-template-columns: 80px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px 180px; /* 时间列80px + 36个课程列各180px */
 	border-top: 1px solid #e5e7eb;
 	border-left: 1px solid #e5e7eb;
-	overflow: auto;
-	max-height: 420px;
+	overflow: visible; /* 去掉滚动条 */
 	position: relative; /* 作为事件块的定位容器 */
 	width: 100%;
 }
@@ -65,7 +65,7 @@ body {
 	border-right: 1px solid #e5e7eb;
 	border-bottom: 1px solid #e5e7eb;
 	position: relative;
-	min-height: 150px; /* 增加高度以容纳课程信息 */
+	min-height: 200px; /* 增加高度以容纳课程信息 */
 }
 .calendar .cell {
 	width: 180px; /* 课程列固定宽度 */
