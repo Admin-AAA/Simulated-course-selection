@@ -12,7 +12,7 @@
 	<!-- xlsx -->
 	<script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.2/dist/xlsx.full.min.js"></script>
 </head>
-<body> 
+<body>
 
 	<main class="layout">
 		<section class="calendar-section">
@@ -34,11 +34,6 @@
 				<input id="searchInput" type="search" placeholder="搜索课程/老师/教室" />
 				<button id="clearSelectionBtn" type="button">清空已选</button>
 				<div class="actions">
-					<!-- <button id="reloadBtn" type="button">重新加载 Excel</button>
-					<label class="file-picker">
-						<span>或选择本地 Excel</span>
-						<input id="fileInput" type="file" accept=".xlsx,.xls" />
-					</label> -->
 					<span id="creditTotalWrap">已选学分：<strong id="creditTotal">0</strong></span>
 				</div>
 			</div>
@@ -47,10 +42,10 @@
 				<thead>
 					<tr>
 						<th style="width:48px;">选</th>
+						<th>代码</th>
 						<th>课程名</th>
 						<th>星期</th>
-						<th>开始</th>
-						<th>结束</th>
+						<th>时间</th>
 						<th>老师</th>
 						<th>教室</th>
 						<th>周次</th>
