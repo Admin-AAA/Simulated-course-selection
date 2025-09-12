@@ -128,9 +128,9 @@ body {
 
 /* 固定代码列宽度 */
 .course-table th:nth-child(2), .course-table td:nth-child(2) { 
-    width: 200px;
-    min-width: 200px;
-    max-width: 200px;
+    width: 230px;
+    min-width: 230px;
+    max-width: 230px;
     overflow: hidden; 
     text-overflow: ellipsis; 
     white-space: nowrap; 
