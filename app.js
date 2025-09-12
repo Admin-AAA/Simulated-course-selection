@@ -74,7 +74,8 @@ const COURSES = [
 	{ id: 22, code: "MEM6309", name: "区块链与金融科技创新概论", className: "MEM6309-03000-S01-PT", credit: 2, firstDate: "2025-09-21", teacher: "范磊", capacity: 60, weeks: "1,4-10周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼125", gpa: true },
 	{ id: 23, code: "MEM6310", name: "运营管理", className: "MEM6310-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "邵晓峰", capacity: 100, weeks: "1-2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼400", gpa: true },
 	{ id: 24, code: "MEM6311", name: "工程管理法律概论", className: "MEM6311-03000-S01-PT", credit: 2, firstDate: "2025-11-29", teacher: "王猛", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼400", gpa: true },
-	{ id: 25, code: "MEM8301", name: "大数据与互联网思维", className: "MEM8301-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "吴晨涛", capacity: 100, weeks: "1-2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: false },
+	{ id: 25, code: "MEM8301", name: "大数据与互联网思维", className: "MEM8301-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "吴晨涛", capacity: 100, weeks: "2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: false },
+	{ id: 25, code: "MEM8301", name: "大数据与互联网思维", className: "MEM8301-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "吴晨涛", capacity: 100, weeks: "2周", weekday: 6, startTime: "18:00", endTime: "21:10", room: "教一楼300", gpa: false },
 	{ id: 26, code: "MEM8302", name: "物联网技术与发展趋势", className: "MEM8302-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "陈奕超", capacity: 60, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼100", gpa: false },
 	{ id: 27, code: "MEM8302", name: "物联网技术与发展趋势", className: "MEM8302-03000-S02-PT", credit: 2, firstDate: "2025-11-29", teacher: "俞嘉地", capacity: 60, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼100", gpa: false },
 	{ id: 28, code: "MEM8303", name: "人工智能", className: "MEM8303-03000-S01-PT", credit: 2, firstDate: "2025-11-29", teacher: "张晓凡", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼300", gpa: false },
@@ -102,9 +103,11 @@ function startOfWeek(date) {
 }
 
 function getTimeSlot(timeStr) {
-	// 将时间转换为上午/下午
+	// 将时间转换为上午/下午/晚上
 	const [h] = timeStr.split(":").map(Number);
-	return h < 12 ? 'morning' : 'afternoon';
+	if (h < 12) return 'morning';
+	if (h < 18) return 'afternoon';
+	return 'evening';
 }
 
 function formatTimeRange(s, e) { return `${s} - ${e}`; }
@@ -191,12 +194,12 @@ function renderCalendarGrid() {
 		calendarEl.appendChild(sunHeader);
 	}
 	
-	// 上午/下午行
-	const timeSlots = ['morning', 'afternoon'];
+	// 上午/下午/晚上行
+	const timeSlots = ['morning', 'afternoon', 'evening'];
 	for (const slot of timeSlots) {
 		const timeCell = document.createElement('div');
 		timeCell.className = 'time-col';
-		timeCell.textContent = slot === 'morning' ? '上午' : '下午';
+		timeCell.textContent = slot === 'morning' ? '上午' : slot === 'afternoon' ? '下午' : '晚上';
 		calendarEl.appendChild(timeCell);
 		
 		for (let week = 1; week <= MAX_WEEKS; week++) {
@@ -628,12 +631,12 @@ function downloadScheduleImage() {
 	// 设置画布尺寸 - 更大的尺寸以获得更好的质量
 	const scale = 2; // 提高分辨率
 	canvas.width = 2400 * scale; // 增加宽度以容纳18周
-	canvas.height = 600 * scale; // 减少高度，使布局更紧凑
+	canvas.height = 750 * scale; // 增加高度以容纳晚上时段和教室信息
 	ctx.scale(scale, scale);
 	
 	// 设置背景
 	ctx.fillStyle = '#f8fafc';
-	ctx.fillRect(0, 0, 2400, 600);
+	ctx.fillRect(0, 0, 2400, 750);
 	
 	// 设置字体
 	ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -673,7 +676,7 @@ function downloadScheduleImage() {
 	const startY = 100;
 	const timeColWidth = 60;
 	const cellWidth = 125; // 减小列宽以容纳18周
-	const cellHeight = 80;
+	const cellHeight = 90;
 	const weekCount = 18;
 	
 	// 绘制表头
@@ -710,7 +713,8 @@ function downloadScheduleImage() {
 	// 绘制时间段
 	const timeSlots = [
 		{ name: '上午', time: '08:30-12:00' },
-		{ name: '下午', time: '13:30-17:00' }
+		{ name: '下午', time: '13:30-17:00' },
+		{ name: '晚上', time: '18:00-21:10' }
 	];
 	
 	timeSlots.forEach((slot, slotIndex) => {
@@ -742,7 +746,7 @@ function downloadScheduleImage() {
 				const coursesInSlot = selectedCourses.filter(course => {
 					const weekSet = parseWeeks(course.weeks);
 					const courseSlot = getTimeSlot(course.startTime);
-					const expectedSlot = slotIndex === 0 ? 'morning' : 'afternoon';
+					const expectedSlot = slotIndex === 0 ? 'morning' : slotIndex === 1 ? 'afternoon' : 'evening';
 					const matches = weekSet.has(week) && course.weekday === day && courseSlot === expectedSlot;
 					if (matches) {
 						console.log(`Found course in week ${week}, day ${day}, slot ${expectedSlot}:`, course.name);
@@ -777,19 +781,22 @@ function downloadScheduleImage() {
 					if (courseName.length > 8) {
 						courseName = courseName.substring(0, 7) + '...';
 					}
-					ctx.fillText(courseName, x + cellWidth / 2, cellY + 5);
+					ctx.fillText(courseName, x + cellWidth / 2, cellY + 3);
 					
 					// 老师
-					ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+					ctx.font = '9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 					ctx.fillStyle = '#6b7280';
-					ctx.fillText(course.teacher, x + cellWidth / 2, cellY + 18);
+					ctx.fillText(course.teacher, x + cellWidth / 2, cellY + 15);
+					
+					// 教室
+					ctx.fillText(course.room || '', x + cellWidth / 2, cellY + 25);
 				}
 			}
 		}
 	});
 	
 	// 绘制图例
-	const legendY = startY + cellHeight * 3 + 10;
+	const legendY = startY + cellHeight * 4 + 20;
 	const legends = [
 		{ text: '普通课程', color: '#dbeafe' },
 		{ text: '必修课程', color: '#fef3c7' },
