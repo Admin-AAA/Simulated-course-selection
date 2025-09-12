@@ -118,7 +118,8 @@ body {
 	border-radius: 8px;
 	padding: 12px;
 }
-.list-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; justify-content: space-between; }
+.list-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.list-toolbar .actions { margin-left: auto; }
 .list-toolbar input[type="search"] { padding: 6px 8px; width: 280px; }
 
 .course-table { width: 100%; border-collapse: collapse; }
