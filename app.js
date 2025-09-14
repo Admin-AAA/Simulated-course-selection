@@ -359,7 +359,7 @@ function renderCourseList() {
 		const isSelected = state.selectedIds.has(c.id);
 		const canSelect = isSelected || canSelectCourse(c.id);
 		const checked = isSelected ? 'checked' : '';
-		const disabled = !canSelect ? 'disabled' : '';
+		const disabled = ''; // 不再禁用任何复选框
 		const inThisWeek = isCourseInWeek(c, state.currentWeekNo);
 		const weeksText = escapeHtml(c.weeks || '') + (inThisWeek ? '（本周）' : '');
 		const credit = CODE_TO_CREDIT[c.code] ?? c.credit ?? '';
@@ -369,15 +369,13 @@ function renderCourseList() {
 		const hasConflict = wouldConflictWithSelected(c.id);
 		
 		let rowClass = '';
-		if (!canSelect) {
-			rowClass = 'style="opacity:0.5;background:#f9f9f9;"';
-		} else if (hasConflict) {
+		if (hasConflict) {
 			rowClass = 'style="opacity:0.6;background:#fee2e2;border-left:4px solid #dc2626;"'; // 红色背景表示冲突
 		} else if (requiredGroup) {
 			rowClass = 'style="background:#fef3c7;border-left:4px solid #f59e0b;"'; // 橙色背景表示必修
 		}
 		
-		const duplicateHint = !canSelect && selectedCodes.has(c.code) ? '<span style="color:#ef4444;font-size:11px;">（已选相同课程）</span>' : '';
+		const duplicateHint = selectedCodes.has(c.code) ? '<span style="color:#ef4444;font-size:11px;">（已选相同课程）</span>' : '';
 		const conflictHint = hasConflict ? '<span style="color:#dc2626;font-size:11px;font-weight:600;">（时间冲突）</span>' : '';
 		const requiredHint = requiredGroup ? `<span style="color:#f59e0b;font-size:11px;font-weight:600;">（${requiredGroup.description}）</span>` : '';
 		const gpaHint = c.gpa === true ? '<span style="color:#059669;font-size:11px;font-weight:600;">（计入GPA）</span>' : 
@@ -457,11 +455,8 @@ function getSelectedCourseCodes() {
 }
 
 function canSelectCourse(courseId) {
-	const course = COURSES.find(c => c.id === courseId);
-	if (!course || !course.code) return true;
-	
-	const selectedCodes = getSelectedCourseCodes();
-	return !selectedCodes.has(course.code);
+	// 允许选择所有课程，不再禁止选择相同课程代码
+	return true;
 }
 
 function wouldConflictWithSelected(courseId) {
