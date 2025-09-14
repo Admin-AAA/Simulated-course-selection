@@ -722,138 +722,121 @@ function downloadScheduleImage() {
 	ctx.fillText(`GPA学分: ${gpaCredits}`, 350, statsY);
 	ctx.fillText(`时间冲突: ${conflictCount}`, 500, statsY);
 	
-	// 计算网格参数（新布局：周六块 + 周日块，各自独立）
+	// 新布局：单行表头 + 3 行时间段；列顺序为 Week1(周六,周日), Week2(周六,周日) ...
 	const startY = 100;
 	const timeColWidth = 70;
-	const cellWidth = 125; // 每周列宽
-	const headerHeight = 42; // 每个日期表头高度
-	const timeRowHeight = 88; // 每个时间段行高
-	const weekCount = 18;
+	const weekCount = 18; // 总周数
+	const splitWeek = 9; // 第一行结束周（含）
+	const days = [6, 7];
+	// 行1: 1-9周, 行2: 10-18周
+	const firstRowWeeks = Array.from({length: splitWeek}, (_,i)=> i+1); // 1..9
+	const secondRowWeeks = Array.from({length: weekCount - splitWeek}, (_,i)=> i+1+splitWeek); //10..18
 
-	// 时间段定义
+	// 计算每行列数（周*2天）
+	const row1Cols = firstRowWeeks.length * days.length;
+	const row2Cols = secondRowWeeks.length * days.length;
+	// 设定统一列宽（按较大行保证总宽<=2400）
+	let cellWidth = Math.floor((2400 - timeColWidth) / Math.max(row1Cols, row2Cols));
+	if (cellWidth < 60) cellWidth = 60; // 给文本更宽一些
+	const headerHeight = 48;
+	const timeRowHeight = 108;
+
 	const timeSlots = [
 		{ key: 'morning', name: '上午', time: '08:30-12:00' },
 		{ key: 'afternoon', name: '下午', time: '13:30-17:00' },
 		{ key: 'evening', name: '晚上', time: '18:00-21:10' }
 	];
 
-	// 布局顺序：周六(表头+3行) 然后 周日(表头+3行)
-	const days = [6, 7];
-
-	// 预计算周次日期
-	const weekDateCache = [];
-	for (let week = 1; week <= weekCount; week++) {
-		const weekStart = getWeekStartByNo(week);
-		weekDateCache.push({
-			week,
-			sat: dayjs(weekStart).add(4, 'day'),
-			sun: dayjs(weekStart).add(5, 'day')
+	// 预缓存周六/周日日期
+	function drawRow(weeksArray, offsetY) {
+		// 生成周 meta
+		const metas = weeksArray.map(w=>{
+			const ws = getWeekStartByNo(w);
+			return {week: w, sat: dayjs(ws).add(4,'day'), sun: dayjs(ws).add(5,'day')};
 		});
-	}
-
-	let currentY = startY;
-
-	for (const day of days) {
-		// === 表头行 ===
-		// 左侧时间列表头占位
+		// 表头
 		ctx.fillStyle = '#fafafa';
-		ctx.fillRect(0, currentY, timeColWidth, headerHeight);
+		ctx.fillRect(0, offsetY, timeColWidth, headerHeight);
 		ctx.strokeStyle = '#e5e7eb';
-		ctx.strokeRect(0, currentY, timeColWidth, headerHeight);
+		ctx.strokeRect(0, offsetY, timeColWidth, headerHeight);
 		ctx.fillStyle = '#1f2937';
 		ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 		ctx.textAlign = 'center';
-		ctx.fillText(day === 6 ? '周六' : '周日', timeColWidth / 2, currentY + 12);
-
-		for (let w = 0; w < weekCount; w++) {
-			const meta = weekDateCache[w];
-			const x = timeColWidth + w * cellWidth;
-			ctx.fillStyle = '#fafafa';
-			ctx.fillRect(x, currentY, cellWidth, headerHeight);
-			ctx.strokeStyle = '#e5e7eb';
-			ctx.strokeRect(x, currentY, cellWidth, headerHeight);
-			ctx.fillStyle = '#1f2937';
-			ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-			ctx.fillText(`第${meta.week}周`, x + cellWidth / 2, currentY + 6);
-			const dateStr = (day === 6 ? meta.sat : meta.sun).format('M/DD');
-			ctx.fillText(`${dateStr} ${day === 6 ? '周六' : '周日'}`, x + cellWidth / 2, currentY + 18);
+		ctx.fillText('时间', timeColWidth/2, offsetY + 14);
+		let x = timeColWidth;
+		ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+		for (const meta of metas) {
+			for (const d of days) {
+				const date = d===6? meta.sat: meta.sun;
+				ctx.fillStyle = '#fafafa';
+				ctx.fillRect(x, offsetY, cellWidth, headerHeight);
+				ctx.strokeStyle = '#e5e7eb';
+				ctx.strokeRect(x, offsetY, cellWidth, headerHeight);
+				ctx.fillStyle = '#1f2937';
+				ctx.fillText(`第${meta.week}周`, x + cellWidth/2, offsetY + 6);
+				ctx.fillText(`${date.format('M/DD')} ${d===6? '六':'日'}`, x + cellWidth/2, offsetY + 22);
+				x += cellWidth;
+			}
 		}
-		currentY += headerHeight; // 移动到该日的第一时间段行
-
-		// === 时间段行 ===
-		for (let slotIndex = 0; slotIndex < timeSlots.length; slotIndex++) {
-			const slot = timeSlots[slotIndex];
-			// 左侧时间列（重复显示）
+		// 时间段行
+		let rowBaseY = offsetY + headerHeight;
+		for (const slot of timeSlots) {
 			ctx.fillStyle = '#fafafa';
-			ctx.fillRect(0, currentY, timeColWidth, timeRowHeight);
+			ctx.fillRect(0, rowBaseY, timeColWidth, timeRowHeight);
 			ctx.strokeStyle = '#e5e7eb';
-			ctx.strokeRect(0, currentY, timeColWidth, timeRowHeight);
+			ctx.strokeRect(0, rowBaseY, timeColWidth, timeRowHeight);
 			ctx.fillStyle = '#6b7280';
 			ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 			ctx.textAlign = 'center';
-			ctx.fillText(slot.name, timeColWidth / 2, currentY + 10);
-			ctx.fillText(slot.time, timeColWidth / 2, currentY + 26);
-
-			// 绘制每周格子
-			for (let w = 0; w < weekCount; w++) {
-				const meta = weekDateCache[w];
-				const x = timeColWidth + w * cellWidth;
-				ctx.fillStyle = '#ffffff';
-				ctx.fillRect(x, currentY, cellWidth, timeRowHeight);
-				ctx.strokeStyle = '#e5e7eb';
-				ctx.strokeRect(x, currentY, cellWidth, timeRowHeight);
-
-				// 查找该格子的课程（该周、该日、该时间段）
-				const weekNo = meta.week;
-				const coursesInSlot = selectedCourses.filter(course => {
-					const weekSet = parseWeeks(course.weeks);
-					return course.weekday === day && weekSet.has(weekNo) && getTimeSlot(course.startTime) === slot.key;
-				});
-
-				if (coursesInSlot.length) {
-					// 如果有多个，显示冲突背景，并依次堆叠文字
-					if (coursesInSlot.length > 1) {
-						ctx.fillStyle = '#fee2e2'; // 冲突
-						ctx.fillRect(x + 1, currentY + 1, cellWidth - 2, timeRowHeight - 2);
-					} else if (isRequiredCourse(coursesInSlot[0].code)) {
-						ctx.fillStyle = '#fef3c7';
-						ctx.fillRect(x + 1, currentY + 1, cellWidth - 2, timeRowHeight - 2);
-					} else if (coursesInSlot[0].gpa) {
-						ctx.fillStyle = '#d1fae5';
-						ctx.fillRect(x + 1, currentY + 1, cellWidth - 2, timeRowHeight - 2);
-					} else {
-						ctx.fillStyle = '#dbeafe';
-						ctx.fillRect(x + 1, currentY + 1, cellWidth - 2, timeRowHeight - 2);
+			ctx.fillText(slot.name, timeColWidth/2, rowBaseY + 12);
+			ctx.fillText(slot.time, timeColWidth/2, rowBaseY + 30);
+			x = timeColWidth;
+			for (const meta of metas) {
+				for (const d of days) {
+					ctx.fillStyle = '#ffffff';
+					ctx.fillRect(x, rowBaseY, cellWidth, timeRowHeight);
+					ctx.strokeStyle = '#e5e7eb';
+					ctx.strokeRect(x, rowBaseY, cellWidth, timeRowHeight);
+					const coursesInCell = selectedCourses.filter(course => {
+						if (course.weekday !== d) return false;
+						if (getTimeSlot(course.startTime) !== slot.key) return false;
+						return parseWeeks(course.weeks).has(meta.week);
+					});
+					if (coursesInCell.length) {
+						let bg = '#dbeafe';
+						if (coursesInCell.length > 1) bg = '#fee2e2';
+						else if (isRequiredCourse(coursesInCell[0].code)) bg = '#fef3c7';
+						else if (coursesInCell[0].gpa) bg = '#d1fae5';
+						ctx.fillStyle = bg;
+						ctx.fillRect(x+1, rowBaseY+1, cellWidth-2, timeRowHeight-2);
+						ctx.textAlign = 'center';
+						let ty = rowBaseY + 6;
+						for (const course of coursesInCell) {
+							let name = course.name;
+							if (name.length > 6) name = name.slice(0,5)+'...';
+							ctx.fillStyle = '#1f2937';
+							ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+							ctx.fillText(name, x + cellWidth/2, ty); ty += 14;
+							ctx.font = '9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+							ctx.fillStyle = '#374151';
+							ctx.fillText(course.teacher, x + cellWidth/2, ty); ty += 12;
+							ctx.fillText(course.room || '', x + cellWidth/2, ty); ty += 12;
+							if (ty > rowBaseY + timeRowHeight - 10) break;
+						}
 					}
-
-					// 文字绘制
-					ctx.textAlign = 'center';
-					let textY = currentY + 6;
-					for (let i = 0; i < coursesInSlot.length; i++) {
-						const course = coursesInSlot[i];
-						let courseName = course.name;
-						if (courseName.length > 8) courseName = courseName.substring(0, 7) + '...';
-						ctx.fillStyle = '#1f2937';
-						ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-						ctx.fillText(courseName, x + cellWidth / 2, textY);
-						textY += 14;
-						ctx.font = '9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-						ctx.fillStyle = '#374151';
-						ctx.fillText(course.teacher, x + cellWidth / 2, textY);
-						textY += 12;
-						ctx.fillText(course.room || '', x + cellWidth / 2, textY);
-						textY += 14;
-						if (textY > currentY + timeRowHeight - 10) break; // 避免溢出
-					}
+					x += cellWidth;
 				}
 			}
-
-			currentY += timeRowHeight; // 下一时间段行
+			rowBaseY += timeRowHeight;
 		}
+		return rowBaseY;
 	}
 
-	// 绘制图例
-	const legendY = currentY + 20;
+	const row1EndY = drawRow(firstRowWeeks, startY);
+	const gap = 24; // 两行间距
+	const row2StartY = row1EndY + gap;
+	const row2EndY = drawRow(secondRowWeeks, row2StartY);
+	const legendY = row2EndY + 20;
 	const legends = [
 		{ text: '普通课程', color: '#dbeafe' },
 		{ text: '必修课程', color: '#fef3c7' },
