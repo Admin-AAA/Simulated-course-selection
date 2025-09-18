@@ -569,104 +569,104 @@ function calculateTotalConflicts() {
 }
 
 /* ICS日历导出功能 */
-function exportICSCalendar() {
-	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id));
-
-	if (selectedCourses.length === 0) {
-		alert('请先选择要导出的课程');
-		return;
-	}
-
-	// ICS文件头部
-	let icsContent = [
-		'BEGIN:VCALENDAR',
-		'VERSION:2.0',
-		'PRODID:-//Course Selection System//Course Calendar//CN',
-		'CALSCALE:GREGORIAN',
-		'METHOD:PUBLISH',
-		'X-WR-CALNAME:我的课程表',
-		'X-WR-TIMEZONE:Asia/Shanghai',
-		'X-WR-CALDESC:从选课系统导出的课程表'
-	].join('\r\n') + '\r\n';
-
-	// 为每门课程的每个上课时间创建事件
-	selectedCourses.forEach(course => {
-		// 只处理周末课程
-		if (course.weekday !== 6 && course.weekday !== 7) return;
-
-		const weekSet = parseWeeks(course.weeks);
-		if (weekSet.size === 0) return;
-
-		// 为每个上课周次创建事件
-		for (const weekNo of weekSet) {
-			const weekStart = getWeekStartByNo(weekNo);
-			const courseDate = dayjs(weekStart).add(course.weekday - 2, 'day'); // 转换为实际日期
-
-			// 创建开始和结束时间
-			const startDateTime = courseDate.hour(parseInt(course.startTime.split(':')[0])).minute(parseInt(course.startTime.split(':')[1]));
-			const endDateTime = courseDate.hour(parseInt(course.endTime.split(':')[0])).minute(parseInt(course.endTime.split(':')[1]));
-
-			// 格式化日期时间为ICS格式 (YYYYMMDDTHHMMSS)
-			const dtStart = startDateTime.format('YYYYMMDD[T]HHmmss');
-			const dtEnd = endDateTime.format('YYYYMMDD[T]HHmmss');
-			const dtStamp = dayjs().format('YYYYMMDD[T]HHmmss[Z]');
-
-            // 生成唯一的UID
-            const uid = `${course.id}-${weekNo}-${dtStart}@course-selection-system`;
-
-			// 创建课程描述
-			const description = [
-				`课程代码: ${course.code}`,
-				`授课老师: ${course.teacher || '未指定'}`,
-				`教室: ${course.room || '未指定'}`,
-				`学分: ${CODE_TO_CREDIT[course.code] || course.credit || '未知'}`,
-				`第${weekNo}周`,
-				course.gpa === true ? '计入GPA' : course.gpa === false ? '不计入GPA' : ''
-			].filter(Boolean).join('\\n');
-
-			// 创建事件
-			const event = [
-				'BEGIN:VEVENT',
-				`UID:${uid}`,
-				`DTSTART:${dtStart}`,
-				`DTEND:${dtEnd}`,
-				`DTSTAMP:${dtStamp}`,
-				`SUMMARY:${course.name}`,
-				`DESCRIPTION:${description}`,
-				`LOCATION:${course.room || ''}`,
-				`STATUS:CONFIRMED`,
-				`TRANSP:OPAQUE`,
-				'END:VEVENT'
-			].join('\r\n') + '\r\n';
-
-			icsContent += event;
-		}
-	});
-
-	// ICS文件结尾
-	icsContent += 'END:VCALENDAR\r\n';
-
-	// 创建并下载文件
-	const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-	const url = URL.createObjectURL(blob);
-	const link = document.createElement('a');
-	link.href = url;
-	link.download = `课程表_${dayjs().format('YYYY-MM-DD')}.ics`;
-	document.body.appendChild(link);
-	link.click();
-	document.body.removeChild(link);
-	URL.revokeObjectURL(url);
-
-	// 统计信息
-	const totalEvents = selectedCourses.reduce((sum, course) => {
-		const weekSet = parseWeeks(course.weeks);
-		return sum + weekSet.size;
-	}, 0);
-
-	const totalCredits = selectedCourses.reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
-
-	alert(`ICS日历文件已生成！\n已导出 ${selectedCourses.length} 门课程，${totalEvents} 个课程事件\n总学分：${totalCredits}\n\n可导入到手机日历、Outlook、Google Calendar等应用中。`);
-}
+// function exportICSCalendar() {
+// 	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id));
+//
+// 	if (selectedCourses.length === 0) {
+// 		alert('请先选择要导出的课程');
+// 		return;
+// 	}
+//
+// 	// ICS文件头部
+// 	let icsContent = [
+// 		'BEGIN:VCALENDAR',
+// 		'VERSION:2.0',
+// 		'PRODID:-//Course Selection System//Course Calendar//CN',
+// 		'CALSCALE:GREGORIAN',
+// 		'METHOD:PUBLISH',
+// 		'X-WR-CALNAME:我的课程表',
+// 		'X-WR-TIMEZONE:Asia/Shanghai',
+// 		'X-WR-CALDESC:从选课系统导出的课程表'
+// 	].join('\r\n') + '\r\n';
+//
+// 	// 为每门课程的每个上课时间创建事件
+// 	selectedCourses.forEach(course => {
+// 		// 只处理周末课程
+// 		if (course.weekday !== 6 && course.weekday !== 7) return;
+//
+// 		const weekSet = parseWeeks(course.weeks);
+// 		if (weekSet.size === 0) return;
+//
+// 		// 为每个上课周次创建事件
+// 		for (const weekNo of weekSet) {
+// 			const weekStart = getWeekStartByNo(weekNo);
+// 			const courseDate = dayjs(weekStart).add(course.weekday - 2, 'day'); // 转换为实际日期
+//
+// 			// 创建开始和结束时间
+// 			const startDateTime = courseDate.hour(parseInt(course.startTime.split(':')[0])).minute(parseInt(course.startTime.split(':')[1]));
+// 			const endDateTime = courseDate.hour(parseInt(course.endTime.split(':')[0])).minute(parseInt(course.endTime.split(':')[1]));
+//
+// 			// 格式化日期时间为ICS格式 (YYYYMMDDTHHMMSS)
+// 			const dtStart = startDateTime.format('YYYYMMDD[T]HHmmss');
+// 			const dtEnd = endDateTime.format('YYYYMMDD[T]HHmmss');
+// 			const dtStamp = dayjs().format('YYYYMMDD[T]HHmmss[Z]');
+//
+//             // 生成唯一的UID
+//             const uid = `${course.id}-${weekNo}-${dtStart}@course-selection-system`;
+//
+// 			// 创建课程描述
+// 			const description = [
+// 				`课程代码: ${course.code}`,
+// 				`授课老师: ${course.teacher || '未指定'}`,
+// 				`教室: ${course.room || '未指定'}`,
+// 				`学分: ${CODE_TO_CREDIT[course.code] || course.credit || '未知'}`,
+// 				`第${weekNo}周`,
+// 				course.gpa === true ? '计入GPA' : course.gpa === false ? '不计入GPA' : ''
+// 			].filter(Boolean).join('\\n');
+//
+// 			// 创建事件
+// 			const event = [
+// 				'BEGIN:VEVENT',
+// 				`UID:${uid}`,
+// 				`DTSTART:${dtStart}`,
+// 				`DTEND:${dtEnd}`,
+// 				`DTSTAMP:${dtStamp}`,
+// 				`SUMMARY:${course.name}`,
+// 				`DESCRIPTION:${description}`,
+// 				`LOCATION:${course.room || ''}`,
+// 				`STATUS:CONFIRMED`,
+// 				`TRANSP:OPAQUE`,
+// 				'END:VEVENT'
+// 			].join('\r\n') + '\r\n';
+//
+// 			icsContent += event;
+// 		}
+// 	});
+//
+// 	// ICS文件结尾
+// 	icsContent += 'END:VCALENDAR\r\n';
+//
+// 	// 创建并下载文件
+// 	const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+// 	const url = URL.createObjectURL(blob);
+// 	const link = document.createElement('a');
+// 	link.href = url;
+// 	link.download = `课程表_${dayjs().format('YYYY-MM-DD')}.ics`;
+// 	document.body.appendChild(link);
+// 	link.click();
+// 	document.body.removeChild(link);
+// 	URL.revokeObjectURL(url);
+//
+// 	// 统计信息
+// 	const totalEvents = selectedCourses.reduce((sum, course) => {
+// 		const weekSet = parseWeeks(course.weeks);
+// 		return sum + weekSet.size;
+// 	}, 0);
+//
+// 	const totalCredits = selectedCourses.reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
+//
+// 	alert(`ICS日历文件已生成！\n已导出 ${selectedCourses.length} 门课程，${totalEvents} 个课程事件\n总学分：${totalCredits}\n\n可导入到手机日历、Outlook、Google Calendar等应用中。`);
+// }
 
 /* 导入/导出功能 */
 function exportSelections() {
@@ -719,12 +719,12 @@ PRODID:-//Course Selection System//Course Schedule//EN
 		// 生成每个周次的VEVENT
 		for (const weekNo of weekSet) {
 			const weekStart = getWeekStartByNo(weekNo);
-			const courseDate = dayjs(weekStart).add(course.weekday - 1, 'day'); // weekday 1=周一, 7=周日
+			const courseDate = dayjs(weekStart).add(course.weekday - 2, 'day'); // weekday 1=周一, 7=周日
 			
 			const eventStart = courseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
 			const eventEnd = courseDate.format('YYYYMMDD') + 'T' + endTime.replace(':', '') + '00';
 			
-			const uid = `course-${course.id}-week${weekNo}@course-selection`;
+			const uid = `course-${course.id}-week${weekNo}-${eventStart}@course-selection`;
 			const summary = `${course.code} ${course.name}`;
 			const location = course.room || '';
 			const description = `教师: ${course.teacher || ''} | 学分: ${CODE_TO_CREDIT[course.code] ?? course.credit ?? ''}`;
