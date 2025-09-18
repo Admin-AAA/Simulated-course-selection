@@ -156,8 +156,6 @@ const importBtn = document.getElementById('importBtn');
 const importFileInputEl = document.getElementById('importFileInput');
 const downloadImageBtn = document.getElementById('downloadImageBtn');
 const exportICSBtn = document.getElementById('exportICSBtn');
-const qrModal = document.getElementById('qrModal');
-const qrClose = document.querySelector('.qr-close');
 const prevWeekBtn = document.getElementById('prevWeekBtn');
 const nextWeekBtn = document.getElementById('nextWeekBtn');
 // Removed non-existent DOM element references
@@ -645,140 +643,16 @@ END:VEVENT
 	
 	icsContent += 'END:VCALENDAR';
 	
-	// 显示加载状态
-	const qrModal = document.getElementById('qrModal');
-	const qrcodeDiv = document.getElementById('qrcode');
-	qrcodeDiv.innerHTML = '<div style="text-align: center; padding: 40px;"><p>正在生成下载链接...</p></div>';
-	qrModal.style.display = 'block';
-	
-	// 上传到免费服务并生成二维码
-	uploadToFileService(icsContent).then(downloadUrl => {
-		if (downloadUrl) {
-			generateQRCodeForUrl(downloadUrl);
-		} else {
-			// 备选方案：直接提供下载
-			fallbackToDirectDownload(icsContent);
-		}
-	}).catch(error => {
-		console.error('上传失败:', error);
-		fallbackToDirectDownload(icsContent);
-	});
-}
-
-function uploadToFileService(icsContent) {
-	// 尝试多个服务，按优先级
-	return uploadToFileIO(icsContent)
-		.catch(() => uploadToTransferSH(icsContent))
-		.catch(() => uploadToPastebin(icsContent));
-}
-
-function uploadToFileIO(content) {
-	const formData = new FormData();
-	formData.append('file', new Blob([content], { type: 'text/calendar' }), 'course-schedule.ics');
-	
-	return fetch('https://file.io', {
-		method: 'POST',
-		body: formData
-	})
-	.then(response => response.json())
-	.then(data => {
-		if (data.success && data.link) {
-			return data.link;
-		}
-		throw new Error('File.io upload failed');
-	});
-}
-
-function uploadToTransferSH(content) {
-	const filename = `course-schedule-${Date.now()}.ics`;
-	return fetch(`https://transfer.sh/${filename}`, {
-		method: 'PUT',
-		body: content,
-		headers: {
-			'Content-Type': 'text/calendar'
-		}
-	})
-	.then(response => {
-		if (response.ok) {
-			return response.text();
-		}
-		throw new Error('Transfer.sh upload failed');
-	});
-}
-
-function uploadToPastebin(content) {
-	// 注意：Pastebin需要API key才能使用
-	// 你可以在这里注册获取API key: https://pastebin.com/api
-	// 然后替换下面的 'your_pastebin_api_key'
-	const API_KEY = 'your_pastebin_api_key'; // 需要替换为实际API key
-	
-	if (API_KEY === 'your_pastebin_api_key') {
-		return Promise.reject(new Error('Pastebin API key not configured'));
-	}
-	
-	const formData = new FormData();
-	formData.append('api_dev_key', API_KEY);
-	formData.append('api_option', 'paste');
-	formData.append('api_paste_code', content);
-	formData.append('api_paste_format', 'text');
-	formData.append('api_paste_name', 'Course Schedule.ics');
-	formData.append('api_paste_expire_date', '1W');
-	
-	return fetch('https://pastebin.com/api/api_post.php', {
-		method: 'POST',
-		body: formData
-	})
-	.then(response => response.text())
-	.then(url => {
-		if (url && url.includes('pastebin.com')) {
-			return url;
-		}
-		throw new Error('Pastebin upload failed');
-	});
-}
-
-function generateQRCodeForUrl(url) {
-	const qrcodeDiv = document.getElementById('qrcode');
-	qrcodeDiv.innerHTML = ''; // 清空之前的二维码
-	
-	// 检查qrcode是否可用
-	if (typeof qrcode === 'undefined') {
-		alert('二维码库加载失败，请刷新页面重试');
-		return;
-	}
-	
-	// 生成二维码
-	const qr = qrcode(10, 'M'); // 使用中等大小
-	qr.addData(url);
-	qr.make();
-	
-	const qrCodeSvg = qr.createSvgTag(8, 0);
-	qrcodeDiv.innerHTML = `
-		<div style="text-align: center;">
-			${qrCodeSvg}
-			<p style="margin: 15px 0 5px; color: #6b7280;">扫描二维码下载ICS文件</p>
-			<p style="font-size: 12px; color: #9ca3af;">或点击链接: <a href="${url}" target="_blank" style="color: #3b82f6;">下载文件</a></p>
-		</div>
-	`;
-}
-
-function fallbackToDirectDownload(icsContent) {
-	const qrcodeDiv = document.getElementById('qrcode');
+	// 直接下载文件
 	const dataBlob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-	const downloadUrl = URL.createObjectURL(dataBlob);
+	const link = document.createElement('a');
+	link.href = URL.createObjectURL(dataBlob);
+	link.download = `课程表_${dayjs().format('YYYY-MM-DD')}.ics`;
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
 	
-	qrcodeDiv.innerHTML = `
-		<div style="text-align: center; padding: 20px;">
-			<p style="color: #6b7280; margin-bottom: 15px;">文件上传失败，使用本地下载</p>
-			<a href="${downloadUrl}" download="课程表_${dayjs().format('YYYY-MM-DD')}.ics" 
-			   style="display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; text-decoration: none; border-radius: 5px;">
-				📥 下载ICS文件
-			</a>
-			<p style="color: #9ca3af; font-size: 12px; margin-top: 10px;">
-				文件大小: ${(icsContent.length / 1024).toFixed(1)}KB
-			</p>
-		</div>
-	`;
+	alert(`已导出 ${selectedCourses.length} 门课程到ICS日历文件`);
 }
 
 function importSelections(file) {
@@ -1186,14 +1060,6 @@ function bindEvents() {
 	});
 	exportICSBtn.addEventListener('click', () => {
 		exportICSCalendar();
-	});
-	qrClose.addEventListener('click', () => {
-		qrModal.style.display = 'none';
-	});
-	window.addEventListener('click', (e) => {
-		if (e.target === qrModal) {
-			qrModal.style.display = 'none';
-		}
 	});
 	importFileInputEl.addEventListener('change', (e) => {
 		const file = e.target.files[0];
