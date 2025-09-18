@@ -695,6 +695,66 @@ function exportSelections() {
 	alert(`已导出 ${selectedCourses.length} 门课程，共 ${totalCredit} 学分，其中 ${gpaCredit} GPA学分`);
 }
 
+function exportICSCalendar() {
+	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id));
+	if (selectedCourses.length === 0) {
+		alert('请先选择课程');
+		return;
+	}
+	
+	let icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Course Selection System//Course Schedule//EN
+`;
+	
+	selectedCourses.forEach(course => {
+		const weekSet = parseWeeks(course.weeks);
+		if (weekSet.size === 0) return; // 跳过无周次信息的课程
+		
+		// 计算课程的开始和结束日期
+		const firstDate = dayjs(course.firstDate);
+		const startTime = course.startTime;
+		const endTime = course.endTime;
+		
+		// 生成每个周次的VEVENT
+		for (const weekNo of weekSet) {
+			const weekStart = getWeekStartByNo(weekNo);
+			const courseDate = dayjs(weekStart).add(course.weekday - 1, 'day'); // weekday 1=周一, 7=周日
+			
+			const eventStart = courseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
+			const eventEnd = courseDate.format('YYYYMMDD') + 'T' + endTime.replace(':', '') + '00';
+			
+			const uid = `course-${course.id}-week${weekNo}@course-selection`;
+			const summary = `${course.code} ${course.name}`;
+			const location = course.room || '';
+			const description = `教师: ${course.teacher || ''} | 学分: ${CODE_TO_CREDIT[course.code] ?? course.credit ?? ''}`;
+			
+			icsContent += `BEGIN:VEVENT
+UID:${uid}
+DTSTART:${eventStart}
+DTEND:${eventEnd}
+SUMMARY:${summary}
+LOCATION:${location}
+DESCRIPTION:${description}
+END:VEVENT
+`;
+		}
+	});
+	
+	icsContent += 'END:VCALENDAR';
+	
+	// 直接下载文件
+	const dataBlob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+	const link = document.createElement('a');
+	link.href = URL.createObjectURL(dataBlob);
+	link.download = `课程表_${dayjs().format('YYYY-MM-DD')}.ics`;
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+	
+	alert(`已导出 ${selectedCourses.length} 门课程到ICS日历文件`);
+}
+
 function importSelections(file) {
 	if (!file) return;
 	
