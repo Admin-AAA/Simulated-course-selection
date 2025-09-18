@@ -11,6 +11,8 @@
 	<script>dayjs.locale('zh-cn');</script>
 	<!-- xlsx -->
 	<script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.2/dist/xlsx.full.min.js"></script>
+	<!-- qrcode -->
+	<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -39,6 +41,7 @@
 				<button id="exportBtn" type="button">导出选课</button>
 				<button id="importBtn" type="button">导入选课</button>
 				<button id="downloadImageBtn" type="button">下载课表图片</button>
+				<button id="exportICSBtn" type="button">导出ICS日历</button>
 				<input id="importFileInput" type="file" accept=".json" style="display: none;" />
 				<div class="actions">
 					<span id="creditTotalWrap">已选学分：<strong id="creditTotal">0</strong></span>
@@ -65,6 +68,16 @@
 			</table>
 		</section>
 	</main>
+
+	<!-- QR Code Modal -->
+	<div id="qrModal" class="qr-modal" style="display: none;">
+		<div class="qr-modal-content">
+			<span class="qr-close">&times;</span>
+			<h3>下载ICS日历文件</h3>
+			<div id="qrcode"></div>
+			<p>扫描二维码或点击链接下载课程表到日历应用</p>
+		</div>
+	</div>
 
 	<footer class="page-footer">
 		<span>数据源：当前目录下的 25级25秋季课程安排信息.xlsx</span>
