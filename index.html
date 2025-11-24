@@ -3,8 +3,12 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>选课系统</title>
+	<title>MEM 选课助手</title>
 	<link rel="stylesheet" href="./styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 	<!-- dayjs -->
 	<script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/dayjs@1/locale/zh-cn.js"></script>
@@ -14,52 +18,107 @@
 </head>
 <body>
 
+    <header class="page-header">
+        <div class="header-content">
+            <div class="brand">
+                <i class="ri-calendar-check-fill brand-icon"></i>
+                <h1>MEM 选课助手</h1>
+            </div>
+            <div class="header-actions">
+                <button id="exportBtn" class="btn btn-outline btn-sm" title="导出选课记录"><i class="ri-download-cloud-2-line"></i> 导出记录</button>
+                <button id="importBtn" class="btn btn-outline btn-sm" title="导入选课记录"><i class="ri-upload-cloud-2-line"></i> 导入记录</button>
+                <input id="importFileInput" type="file" accept=".json" style="display: none;" />
+            </div>
+        </div>
+    </header>
+
 	<main class="layout">
-		<section class="calendar-section">
+        <!-- 统计仪表盘 -->
+        <section class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon bg-blue"><i class="ri-book-mark-line"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">已选学分</span>
+                    <strong id="creditTotal" class="stat-value">0</strong>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-orange"><i class="ri-star-line"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">核心必修</span>
+                    <strong id="requiredProgress" class="stat-value">0/3</strong>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-green"><i class="ri-graduation-cap-line"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">GPA学分</span>
+                    <strong id="gpaDisplay" class="stat-value">0</strong>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-red"><i class="ri-alarm-warning-line"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">时间冲突</span>
+                    <strong id="conflictDisplay" class="stat-value">0</strong>
+                </div>
+            </div>
+        </section>
+
+		<section class="calendar-section card">
 			<div class="calendar-header">
-				<button id="prevWeekBtn" class="nav-btn" type="button">‹ 上周</button>
-				<div id="weekTitle" class="week-title"></div>
-				<button id="nextWeekBtn" class="nav-btn" type="button">下周 ›</button>
+                <div class="calendar-nav">
+				    <button id="prevWeekBtn" class="btn btn-icon" type="button"><i class="ri-arrow-left-s-line"></i></button>
+				    <div id="weekTitle" class="week-title"></div>
+				    <button id="nextWeekBtn" class="btn btn-icon" type="button"><i class="ri-arrow-right-s-line"></i></button>
+                </div>
+                <div class="calendar-actions">
+                    <button id="downloadImageBtn" class="btn btn-primary btn-sm" type="button"><i class="ri-image-line"></i> 保存图片</button>
+                    <button id="exportICSBtn" class="btn btn-primary btn-sm" type="button"><i class="ri-calendar-event-line"></i> 导出 ICS</button>
+                </div>
 			</div>
-			<div id="calendar" class="calendar"></div>
-			<div class="calendar-legend">
+            
+            <div class="calendar-legend">
 				<span class="legend-item legend-free">空闲</span>
 				<span class="legend-item legend-selected">已选</span>
 				<span class="legend-item legend-required">必修</span>
-				<span class="legend-item legend-gpa">计入GPA</span>
-				<span class="legend-item legend-non-gpa">不计GPA</span>
+				<span class="legend-item legend-gpa">GPA</span>
 				<span class="legend-item legend-conflict">冲突</span>
 			</div>
+
+			<div class="calendar-wrapper">
+                <div id="calendar" class="calendar"></div>
+            </div>
 		</section>
 
-		<section class="list-section">
+		<section class="list-section card">
 			<div class="list-toolbar">
-                <label for="searchInput"></label><input id="searchInput" type="search" placeholder="搜索课程/老师/教室" />
-				<button id="clearSelectionBtn" type="button">清空已选</button>
-				<button id="exportBtn" type="button">导出选课</button>
-				<button id="importBtn" type="button">导入选课</button>
-				<button id="downloadImageBtn" type="button">下载课表图片</button>
-				<button id="exportICSBtn" type="button">导出ICS日历</button>
-				<input id="importFileInput" type="file" accept=".json" style="display: none;" />
-				<div class="actions">
-					<span id="creditTotalWrap">已选学分：<strong id="creditTotal">0</strong></span>
-					<span id="requiredProgressWrap" style="margin-left:16px;">核心必修：<strong id="requiredProgress">0/3</strong></span>
-					<span id="gpaWrap" style="margin-left:16px;">GPA学分：<strong id="gpaDisplay">0</strong></span>
-					<span id="conflictWrap" style="margin-left:16px;">时间冲突：<strong id="conflictDisplay">0</strong></span>
-				</div>
+                <div class="toolbar-group">
+                    <div class="search-box">
+                        <i class="ri-search-line search-icon"></i>
+                        <input id="searchInput" type="search" placeholder="搜索课程名称、老师或教室..." />
+                    </div>
+                    <div class="action-buttons">
+                        <button id="downloadImageBtnList" class="btn btn-primary btn-sm" type="button"><i class="ri-image-line"></i> 保存图片</button>
+                        <button id="exportICSBtnList" class="btn btn-primary btn-sm" type="button"><i class="ri-calendar-event-line"></i> 导出 ICS</button>
+                    </div>
+                </div>
+				<div class="list-actions">
+                    <button id="clearSelectionBtn" class="btn btn-text text-danger" type="button"><i class="ri-delete-bin-line"></i> 清空已选</button>
+                </div>
 			</div>
-			<div id="mappingHint" class="mapping-hint" hidden></div>
+            
 			<table class="course-table">
 				<thead>
 					<tr>
-						<th style="width:48px;">选</th>
-						<th>代码</th>
-						<th>课程名</th>
-						<th>星期</th>
-						<th>时间</th>
-						<th>老师</th>
-						<th>教室</th>
-						<th>周次</th>
+						<th class="w-checkbox">选</th>
+						<th class="w-code">代码</th>
+						<th class="w-name">课程名</th>
+						<th class="w-day">星期</th>
+						<th class="w-time">时间</th>
+						<th class="w-teacher">老师</th>
+						<th class="w-room">教室</th>
+						<th class="w-weeks">周次</th>
 					</tr>
 				</thead>
 				<tbody id="courseTbody"></tbody>
@@ -68,9 +127,9 @@
 	</main>
 
 	<footer class="page-footer">
-		<span>数据源：当前目录下的 25级25秋季课程安排信息.xlsx</span>
+		<p>数据源：当前目录下的 25级25秋季课程安排信息.xlsx</p>
 	</footer>
 
 	<script src="./app.js"></script>
 </body>
-</html> 
+</html>

@@ -156,10 +156,11 @@ const importBtn = document.getElementById('importBtn');
 const importFileInputEl = document.getElementById('importFileInput');
 const downloadImageBtn = document.getElementById('downloadImageBtn');
 const exportICSBtn = document.getElementById('exportICSBtn');
+const downloadImageBtnList = document.getElementById('downloadImageBtnList');
+const exportICSBtnList = document.getElementById('exportICSBtnList');
 const prevWeekBtn = document.getElementById('prevWeekBtn');
 const nextWeekBtn = document.getElementById('nextWeekBtn');
-// Removed non-existent DOM element references
-const mappingHintEl = document.getElementById('mappingHint');
+
 const creditTotalEl = document.getElementById('creditTotal');
 const requiredProgressEl = document.getElementById('requiredProgress');
 const gpaDisplayEl = document.getElementById('gpaDisplay');
@@ -168,10 +169,16 @@ const conflictDisplayEl = document.getElementById('conflictDisplay');
 /* 渲染：周末专用日历栅格 */
 function renderCalendarGrid() {
 	calendarEl.innerHTML = '';
-	// 头部：时间列 + 周次×周末列
+	
+    // 左上角空块
 	const corner = document.createElement('div');
-	corner.className = 'day-header';
-	corner.textContent = '';
+	corner.className = 'time-col'; // Use time-col style for top-left corner too
+    corner.style.zIndex = '21';
+    corner.style.background = 'var(--gray-50)';
+    corner.style.position = 'sticky';
+    corner.style.top = '0';
+    corner.style.left = '0';
+	corner.innerHTML = '<i class="ri-time-line"></i>';
 	calendarEl.appendChild(corner);
 	
 	// 生成周次×周末列标题
@@ -182,25 +189,30 @@ function renderCalendarGrid() {
 		
 		const satHeader = document.createElement('div');
 		satHeader.className = 'day-header';
-		satHeader.textContent = `第${week}周 ${satDate.format('M/DD')} 周六`;
+		satHeader.innerHTML = `<div>第${week}周</div><div style="font-weight:400;margin-top:2px;">${satDate.format('M/DD')} 周六</div>`;
 		satHeader.dataset.week = String(week);
 		satHeader.dataset.day = '6';
 		calendarEl.appendChild(satHeader);
 		
 		const sunHeader = document.createElement('div');
 		sunHeader.className = 'day-header';
-		sunHeader.textContent = `第${week}周 ${sunDate.format('M/DD')} 周日`;
+		sunHeader.innerHTML = `<div>第${week}周</div><div style="font-weight:400;margin-top:2px;">${sunDate.format('M/DD')} 周日</div>`;
 		sunHeader.dataset.week = String(week);
 		sunHeader.dataset.day = '7';
 		calendarEl.appendChild(sunHeader);
 	}
 	
 	// 上午/下午/晚上行
-	const timeSlots = ['morning', 'afternoon', 'evening'];
+	const timeSlots = [
+        { key: 'morning', label: '上午', time: '08:30-12:00' }, 
+        { key: 'afternoon', label: '下午', time: '13:30-17:00' }, 
+        { key: 'evening', label: '晚上', time: '18:00-21:10' }
+    ];
+    
 	for (const slot of timeSlots) {
 		const timeCell = document.createElement('div');
 		timeCell.className = 'time-col';
-		timeCell.textContent = slot === 'morning' ? '上午' : slot === 'afternoon' ? '下午' : '晚上';
+		timeCell.innerHTML = `<div style="text-align:center;"><div>${slot.label}</div><div style="font-size:10px;opacity:0.8;margin-top:4px;">${slot.time}</div></div>`;
 		calendarEl.appendChild(timeCell);
 		
 		for (let week = 1; week <= MAX_WEEKS; week++) {
@@ -209,7 +221,7 @@ function renderCalendarGrid() {
 				cell.className = 'cell';
 				cell.dataset.week = String(week);
 				cell.dataset.day = String(day);
-				cell.dataset.slot = slot;
+				cell.dataset.slot = slot.key;
 				calendarEl.appendChild(cell);
 			}
 		}
@@ -297,54 +309,42 @@ function renderEvents() {
 			
 			// 优先级：冲突 > 必修 > 普通
 			if (group.length > 1) {
-				block.style.background = '#fee2e2';
-				block.style.border = '1px solid #fca5a5';
+				// conflict styles handled by class
 			} else if (hasRequiredCourse) {
-				block.style.background = '#fef3c7';
-				block.style.border = '2px solid #f59e0b';
+				// required styles handled by class
 			} else {
-				block.style.background = '#dbeafe';
-				block.style.border = '1px solid #93c5fd';
+				// default styles handled by class
 			}
-			block.style.color = '#0b1220';
 
 			if (group.length === 1) {
 				const c = group[0];
 				const requiredGroup = isRequiredCourse(c.code);
-				const requiredBadge = requiredGroup ? '<span style="background:#f59e0b;color:white;font-size:9px;padding:1px 4px;border-radius:4px;margin-left:4px;">必修</span>' : '';
-				const gpaBadge = c.gpa === true ? '<span style="background:#059669;color:white;font-size:9px;padding:1px 4px;border-radius:4px;margin-left:4px;">GPA</span>' : 
-								c.gpa === false ? '<span style="background:#6b7280;color:white;font-size:9px;padding:1px 4px;border-radius:4px;margin-left:4px;">非GPA</span>' : '';
+				const requiredBadge = requiredGroup ? '<span class="badge badge-warning" style="margin-left:0;">必修</span>' : '';
+				const gpaBadge = c.gpa === true ? '<span class="badge badge-success" style="margin-left:0;">GPA</span>' : 
+								c.gpa === false ? '<span class="badge badge-gray" style="margin-left:0;">非GPA</span>' : '';
                 // 添加课程代码显示
                 block.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                        <div style="flex:1;min-width:0;">
-                            <div class="title" style="font-weight:600;margin-bottom:2px;">[${escapeHtml(c.code)}] ${escapeHtml(c.name)}${requiredBadge}${gpaBadge}</div>
-                            <div class="meta" style="color:#374151;opacity:0.9;">${formatTimeRange(c.startTime, c.endTime)} · ${escapeHtml(c.room || '')} · ${escapeHtml(c.teacher || '')}</div>
-                        </div>
-                        <button class="unselect-btn" data-course-id="${c.id}" style="background:rgba(0,0,0,0.1);border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:#666;margin-left:4px;flex-shrink:0;" title="取消选择">×</button>
-                    </div>
+                    <div class="title" title="${escapeHtml(c.name)}">[${escapeHtml(c.code)}] ${escapeHtml(c.name)}</div>
+                    <div style="display:flex;gap:4px;margin-bottom:4px;">${requiredBadge}${gpaBadge}</div>
+                    <div class="meta"><i class="ri-time-line" style="vertical-align:middle"></i> ${formatTimeRange(c.startTime, c.endTime)}</div>
+                    <div class="meta"><i class="ri-map-pin-line" style="vertical-align:middle"></i> ${escapeHtml(c.room || '')}</div>
+                    <div class="meta"><i class="ri-user-line" style="vertical-align:middle"></i> ${escapeHtml(c.teacher || '')}</div>
+                    <button class="unselect-btn" data-course-id="${c.id}" title="取消选择"><i class="ri-close-line"></i></button>
                 `;
             } else {
                 const items = group.map(c => {
                     const requiredGroup = isRequiredCourse(c.code);
-                    const requiredBadge = requiredGroup ? '<span style="background:#f59e0b;color:white;font-size:8px;padding:1px 3px;border-radius:3px;margin-left:3px;">必修</span>' : '';
-                    const gpaBadge = c.gpa === true ? '<span style="background:#059669;color:white;font-size:8px;padding:1px 3px;border-radius:3px;margin-left:3px;">GPA</span>' : 
-                                    c.gpa === false ? '<span style="background:#6b7280;color:white;font-size:8px;padding:1px 3px;border-radius:3px;margin-left:3px;">非GPA</span>' : '';
-                    // 添加课程代码显示
+                    // Simplified badges for conflict list
                     return `
-                        <div class="conf-item" style="background:rgba(255,255,255,0.6);border:1px dashed #fca5a5;border-radius:2px;padding:2px;margin:1px 0;position:relative;">
-                            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                                <div style="flex:1;min-width:0;">
-                                    <div class="conf-title" style="font-weight:600;margin-bottom:1px;">[${escapeHtml(c.code)}] ${escapeHtml(c.name)}${requiredBadge}${gpaBadge}</div>
-                                    <div class="conf-meta" style="color:#374151;opacity:0.9;">${formatTimeRange(c.startTime, c.endTime)} · ${escapeHtml(c.room || '')} · ${escapeHtml(c.teacher || '')}</div>
-                                </div>
-                                <button class="unselect-btn" data-course-id="${c.id}" style="background:rgba(0,0,0,0.1);border:none;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:#666;margin-left:4px;flex-shrink:0;" title="取消选择">×</button>
-                            </div>
+                        <div class="conf-item">
+                            <div class="conf-title">[${escapeHtml(c.code)}] ${escapeHtml(c.name)}</div>
+                            <div class="conf-meta">${formatTimeRange(c.startTime, c.endTime)} · ${escapeHtml(c.room || '')}</div>
+                            <button class="unselect-btn" data-course-id="${c.id}" style="position:static;margin-left:auto;opacity:1;background:none;color:var(--danger);" title="取消选择"><i class="ri-delete-bin-line"></i></button>
                         </div>
                     `;
                 }).join('');
                 block.innerHTML = `
-                    <div class="title" style="font-weight:600;margin-bottom:2px;">时间冲突</div>
+                    <div class="title" style="color:var(--danger);display:flex;align-items:center;gap:4px;"><i class="ri-alert-line"></i> 时间冲突</div>
                     <div class="conf-list">${items}</div>
                 `;
             }
@@ -362,7 +362,7 @@ function renderCourseList() {
 		const checked = isSelected ? 'checked' : '';
 		const disabled = ''; // 不再禁用任何复选框
 		const inThisWeek = isCourseInWeek(c, state.currentWeekNo);
-		const weeksText = escapeHtml(c.weeks || '') + (inThisWeek ? '（本周）' : '');
+		const weeksText = escapeHtml(c.weeks || '') + (inThisWeek ? ' <span class="badge badge-primary">本周</span>' : '');
 		const credit = CODE_TO_CREDIT[c.code] ?? c.credit ?? '';
 		
 		// 检查是否为必修课程和冲突情况
@@ -370,32 +370,43 @@ function renderCourseList() {
 		const hasConflict = wouldConflictWithSelected(c.id);
 		
 		let rowClass = '';
-		if (hasConflict) {
-			rowClass = 'style="opacity:0.6;background:#fee2e2;border-left:4px solid #dc2626;"'; // 红色背景表示冲突
-		} else if (requiredGroup) {
-			rowClass = 'style="background:#fef3c7;border-left:4px solid #f59e0b;"'; // 橙色背景表示必修
+		if (hasConflict && !isSelected) {
+			rowClass = 'class="row-conflict"';
+		} else if (isSelected) {
+            rowClass = 'class="row-selected"';
+        } else if (requiredGroup) {
+			rowClass = 'class="row-required"';
 		}
 		
-		const duplicateHint = selectedCodes.has(c.code) ? '<span style="color:#ef4444;font-size:11px;">（已选相同课程）</span>' : '';
-		const conflictHint = hasConflict ? '<span style="color:#dc2626;font-size:11px;font-weight:600;">（时间冲突）</span>' : '';
-		const requiredHint = requiredGroup ? `<span style="color:#f59e0b;font-size:11px;font-weight:600;">（${requiredGroup.description}）</span>` : '';
-		const gpaHint = c.gpa === true ? '<span style="color:#059669;font-size:11px;font-weight:600;">（计入GPA）</span>' : 
-						c.gpa === false ? '<span style="color:#6b7280;font-size:11px;">（不计GPA）</span>' : '';
+		const duplicateHint = selectedCodes.has(c.code) && !isSelected ? '<div style="font-size:11px;color:var(--danger);margin-top:2px;">已选同名课程</div>' : '';
+		const conflictHint = hasConflict && !isSelected ? '<span class="badge badge-danger">冲突</span>' : '';
+		const requiredHint = requiredGroup ? `<span class="badge badge-warning">${requiredGroup.description}</span>` : '';
+		const gpaHint = c.gpa === true ? '<span class="badge badge-success">GPA</span>' : 
+						c.gpa === false ? '<span class="badge badge-gray">非GPA</span>' : '';
 		
 		return `
 			<tr ${rowClass}>
-				<td><input type="checkbox" data-id="${c.id}" ${checked} ${disabled}></td>
-				<td>${escapeHtml(c.code || '')}${duplicateHint}${conflictHint}${requiredHint}${gpaHint}</td>
-				<td>${escapeHtml(c.name)}<div style="font-size:12px;color:#6b7280;">学分：${credit}</div></td>
-				<td>${weekdayLabel(c.weekday)}</td>
-				<td>${formatTimeRange(c.startTime, c.endTime)}</td>
-				<td>${escapeHtml(c.teacher || '')}</td>
-				<td>${escapeHtml(c.room || '')}</td>
-				<td>${weeksText}</td>
+				<td class="w-checkbox"><input type="checkbox" data-id="${c.id}" ${checked} ${disabled}></td>
+				<td class="w-code" data-label="代码">${escapeHtml(c.code || '')}</td>
+				<td class="w-name" data-label="课程名">
+                    <div style="font-weight:500;">${escapeHtml(c.name)}</div>
+                    ${duplicateHint}
+                </td>
+				<td class="w-day" data-label="星期">${weekdayLabel(c.weekday)}</td>
+				<td class="w-time" data-label="时间">${formatTimeRange(c.startTime, c.endTime)}</td>
+				<td class="w-teacher" data-label="老师">${escapeHtml(c.teacher || '')}</td>
+				<td class="w-room" data-label="教室">${escapeHtml(c.room || '')}</td>
+				<td class="w-weeks" data-label="周次">
+                    <div style="margin-bottom:2px;">${weeksText}</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                        ${conflictHint}${requiredHint}${gpaHint}
+                        <span class="badge badge-gray">${credit}学分</span>
+                    </div>
+                </td>
 			</tr>
 		`;
 	}).join('');
-	courseTbodyEl.innerHTML = rows || `<tr><td colspan="8" style="text-align:center;color:#9ca3af;">无结果</td></tr>`;
+	courseTbodyEl.innerHTML = rows || `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:32px;">无搜索结果</td></tr>`;
 	updateSelectedCredit();
 }
 
@@ -424,23 +435,25 @@ function updateSelectedCredit() {
 	// 更新必修课程进度
 	const progress = getRequiredCourseProgress('core');
 	if (requiredProgressEl) {
-		const color = progress.selected >= progress.required ? '#10b981' : (progress.selected > 0 ? '#f59e0b' : '#6b7280');
+		// const color = progress.selected >= progress.required ? '#10b981' : (progress.selected > 0 ? '#f59e0b' : '#6b7280');
 		requiredProgressEl.textContent = `${progress.selected}/${progress.required}`;
-		requiredProgressEl.style.color = color;
+		// requiredProgressEl.style.color = color;
 	}
 	
 	// 更新GPA学分显示
 	const gpaCredits = calculateGPACredits();
 	if (gpaDisplayEl) {
 		gpaDisplayEl.textContent = String(gpaCredits);
-		gpaDisplayEl.style.color = gpaCredits > 0 ? '#059669' : '#6b7280';
+        // Remove inline color style, use class if needed, but here we just update text
+		// gpaDisplayEl.style.color = gpaCredits > 0 ? '#059669' : '#6b7280';
 	}
 	
 	// 更新冲突显示
 	const conflictCount = calculateTotalConflicts();
 	if (conflictDisplayEl) {
 		conflictDisplayEl.textContent = String(conflictCount);
-		conflictDisplayEl.style.color = conflictCount > 0 ? '#dc2626' : '#6b7280';
+        // Remove inline color style
+		// conflictDisplayEl.style.color = conflictCount > 0 ? '#dc2626' : '#6b7280';
 		// Debug log
 		console.log('Conflict count updated:', conflictCount);
 	}
@@ -1158,9 +1171,19 @@ function bindEvents() {
 	downloadImageBtn.addEventListener('click', () => {
 		downloadScheduleImage();
 	});
+    if (downloadImageBtnList) {
+        downloadImageBtnList.addEventListener('click', () => {
+            downloadScheduleImage();
+        });
+    }
 	exportICSBtn.addEventListener('click', () => {
 		exportICSCalendar();
 	});
+    if (exportICSBtnList) {
+        exportICSBtnList.addEventListener('click', () => {
+            exportICSCalendar();
+        });
+    }
 	importFileInputEl.addEventListener('change', (e) => {
 		const file = e.target.files[0];
 		if (file) {

@@ -1,159 +1,762 @@
+:root {
+    /* Colors */
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-light: #eff6ff;
+    
+    --success: #10b981;
+    --success-bg: #d1fae5;
+    --warning: #f59e0b;
+    --warning-bg: #fef3c7;
+    --danger: #ef4444;
+    --danger-bg: #fee2e2;
+    
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    
+    --bg-body: #f1f5f9;
+    --bg-card: #ffffff;
+    
+    /* Spacing & Sizing */
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    
+    /* Typography */
+    --font-sans: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+
 body {
 	margin: 0;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-	color: #1f2937;
-	background: #f8fafc;
+	font-family: var(--font-sans);
+	color: var(--gray-800);
+	background: var(--bg-body);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
 }
 
-.page-header, .page-footer {
-	padding: 12px 16px;
-	background: #ffffff;
-	border-bottom: 1px solid #e5e7eb;
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    color: var(--gray-700);
 }
-.page-footer { border-top: 1px solid #e5e7eb; border-bottom: none; }
-.page-header h1 { margin: 0 0 8px; font-size: 20px; }
-.actions { display: flex; gap: 12px; align-items: center; }
-.file-picker { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
-.file-picker input { display: none; }
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+.btn-secondary:hover { background: var(--gray-200); }
+
+.btn-outline {
+    border-color: var(--gray-300);
+    background: white;
+}
+.btn-outline:hover { border-color: var(--gray-400); background: var(--gray-50); }
+
+.btn-text {
+    background: transparent;
+    padding: 6px 12px;
+}
+.btn-text:hover { background: var(--gray-100); }
+.btn-text.text-danger { color: var(--danger); }
+.btn-text.text-danger:hover { background: var(--danger-bg); }
+
+.btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+.btn-icon {
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-icon:hover { background: var(--gray-100); }
+
+/* Layout */
+.page-header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--gray-200);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: var(--shadow-sm);
+}
+.header-content {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.brand-icon {
+    font-size: 24px;
+    color: var(--primary);
+}
+.brand h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
 
 .layout {
-	display: grid;
-	grid-template-rows: auto 1fr;
-	gap: 12px;
-	padding: 12px 16px 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+}
+
+/* Stats Dashboard */
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+.stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+}
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+.stat-icon.bg-blue { background: var(--primary-light); color: var(--primary); }
+.stat-icon.bg-orange { background: var(--warning-bg); color: var(--warning); }
+.stat-icon.bg-green { background: var(--success-bg); color: var(--success); }
+.stat-icon.bg-red { background: var(--danger-bg); color: var(--danger); }
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+.stat-label {
+    font-size: 12px;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+.stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gray-800);
+    line-height: 1.2;
+}
+
+/* Calendar Section */
 .calendar-section {
-	background: #ffffff;
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	padding: 12px;
-	overflow-x: auto; /* 保持水平滚动 */
-	overflow-y: visible; /* 去掉垂直滚动条 */
+    padding: 16px;
 }
 .calendar-header {
-	display: grid;
-	grid-template-columns: 120px 1fr 120px;
-	align-items: center;
-	gap: 8px;
-	margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
-.week-title { text-align: center; font-weight: 600; }
-.nav-btn { padding: 6px 10px; }
-.calendar-legend { display: flex; gap: 12px; font-size: 12px; color: #6b7280; margin-top: 8px; }
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.week-title {
+    font-size: 16px;
+    font-weight: 600;
+    min-width: 280px;
+    text-align: center;
+}
+.calendar-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.calendar-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--gray-600);
+    margin-bottom: 12px;
+    padding: 0 8px;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 .legend-item::before {
-	content: "";
-	display: inline-block;
-	width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle;
-	background: #e5e7eb;
+    content: "";
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
 }
-.legend-selected::before { background: #60a5fa; }
-.legend-required::before { background: #f59e0b; }
-.legend-gpa::before { background: #059669; }
-.legend-non-gpa::before { background: #6b7280; }
-.legend-conflict::before { background: #f87171; }
+.legend-free::before { background: white; border: 1px solid var(--gray-200); }
+.legend-selected::before { background: var(--primary-light); border: 1px solid #93c5fd; }
+.legend-required::before { background: var(--warning-bg); border: 1px solid #fcd34d; }
+.legend-gpa::before { background: var(--success-bg); border: 1px solid #86efac; }
+.legend-conflict::before { background: var(--danger-bg); border: 1px solid #fca5a5; }
 
+.calendar-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+}
 .calendar {
-	display: grid;
-	grid-template-columns: 80px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px 220px; /* 时间列80px + 36个课程列各220px */
-	border-top: 1px solid #e5e7eb;
-	border-left: 1px solid #e5e7eb;
-	overflow: visible; /* 去掉滚动条 */
-	position: relative; /* 作为事件块的定位容器 */
-	width: 100%;
-}
-.calendar .cell, .calendar .time-col, .calendar .day-col {
-	border-right: 1px solid #e5e7eb;
-	border-bottom: 1px solid #e5e7eb;
-	position: relative;
-	min-height: 200px; /* 增加高度以容纳课程信息 */
-}
-.calendar .cell {
-	width: 220px; /* 课程列固定宽度 */
-}
-.calendar .time-col {
-	width: 80px; /* 时间列固定宽度 */
-}
-.time-col { background: #fafafa; font-size: 12px; color: #6b7280; text-align: right; padding: 4px 6px; }
-.day-header { 
-	background: #fafafa; 
-	text-align: center; 
-	padding: 6px 4px; 
-	font-weight: 600; 
-	position: sticky; 
-	top: 0; 
-	z-index: 2; 
-	font-size: 11px; 
-	line-height: 1.2;
-	width: 220px; /* 课程列固定宽度 */
+    display: grid;
+    grid-template-columns: 80px repeat(36, 180px); /* 时间列 + 18周*2天 */
+    background: white;
+    width: max-content; /* 确保宽度撑开 */
 }
 
+/* Calendar Grid Cells */
+.calendar .cell, .calendar .time-col, .calendar .day-header {
+    border-right: 1px solid var(--gray-200);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.day-header {
+    background: var(--gray-50);
+    padding: 10px 4px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    color: var(--gray-700);
+}
+
+.time-col {
+    background: var(--gray-50);
+    color: var(--gray-500);
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    left: 0;
+    z-index: 11; /* Ensure time column is above cells but below day header corner */
+    width: 80px;
+    background-clip: padding-box; /* Avoid transparency issues */
+}
+
+/* Fix sticky corner */
+.day-header:first-child {
+    position: sticky;
+    left: 0;
+    top: 0;
+    z-index: 20;
+}
+
+.cell {
+    height: 180px; /* Reduced height slightly */
+    position: relative;
+    background: white;
+}
+
+/* Event Cards in Calendar */
 .event {
-	position: absolute;
-	border-radius: 6px;
-	padding: 6px 8px;
-	font-size: 12px;
-	line-height: 1.2;
-	color: #0b1220;
-	background: #dbeafe;
-	border: 1px solid #93c5fd;
-	overflow: hidden;
+    position: absolute;
+    top: 4px; left: 4px; right: 4px; bottom: 4px;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--gray-800);
+    background: var(--primary-light);
+    border-left: 3px solid var(--primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    overflow: hidden;
+    transition: transform 0.1s;
+    display: flex;
+    flex-direction: column;
 }
-.event.conflict { background: #fee2e2; border-color: #fca5a5; }
-.event .title { font-weight: 600; margin-bottom: 4px; }
-.event .meta { color: #374151; opacity: 0.9; }
+.event:hover {
+    transform: scale(1.02);
+    z-index: 5;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
 
-/* 冲突合并卡片内部 */
-.event.group { display: flex; flex-direction: column; gap: 6px; padding: 8px; }
-.event .conf-list { display: flex; flex-direction: column; gap: 6px; }
-.event .conf-item { background: rgba(255,255,255,0.6); border: 1px dashed #fca5a5; border-radius: 4px; padding: 6px; }
-.event .conf-title { font-weight: 600; margin-bottom: 2px; }
-.event .conf-meta { color: #374151; opacity: 0.9; }
+.event.conflict { background: var(--danger-bg); border-left-color: var(--danger); }
+.event.required { background: var(--warning-bg); border-left-color: var(--warning); }
+.event.gpa { background: var(--success-bg); border-left-color: var(--success); }
 
+.event .title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.event .meta {
+    font-size: 11px;
+    color: var(--gray-600);
+    margin-top: auto;
+}
+
+/* Conflict Group */
+.event.group {
+    padding: 4px;
+    gap: 4px;
+    overflow-y: auto; /* Allow scrolling for conflicts */
+}
+.event .conf-item {
+    background: rgba(255,255,255,0.5);
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 11px;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Close Button */
+.unselect-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.1);
+    border: none;
+    color: var(--gray-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.event:hover .unselect-btn { opacity: 1; }
+.unselect-btn:hover { background: var(--danger); color: white; }
+
+
+/* List Section */
 .list-section {
-	background: #ffffff;
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	padding: 12px;
+    display: flex;
+    flex-direction: column;
+    height: 600px; /* Fixed height for scrolling */
 }
-.list-toolbar { 
-	display: flex; 
-	gap: 8px; 
-	align-items: center; 
-	margin-bottom: 8px; 
-	position: sticky; 
-	top: 0; 
-	background: #ffffff; 
-	z-index: 10; 
-	padding: 8px 0; 
-	border-bottom: 1px solid #e5e7eb; 
+.list-toolbar {
+    padding: 16px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    background: white;
 }
-.list-toolbar .actions { margin-left: auto; }
-.list-toolbar input[type="search"] { padding: 6px 8px; width: 280px; }
-
-.course-table { width: 100%; border-collapse: collapse; }
-.course-table th, .course-table td { border: 1px solid #e5e7eb; padding: 8px; font-size: 14px; }
-.course-table thead th { background: #fafafa; }
-.course-table tbody tr:hover { background: #f9fafb; }
-
-/* 固定代码列宽度 */
-.course-table th:nth-child(2), .course-table td:nth-child(2) { 
-    width: 350px;
-    min-width: 350px;
-    max-width: 350px;
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-    white-space: nowrap; 
+.toolbar-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex: 1;
+}
+.search-box {
+    position: relative;
+    width: 320px;
+}
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+    font-size: 16px;
+}
+.search-box input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    transition: border-color 0.2s;
+    outline: none;
+}
+.search-box input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
 }
 
-.mapping-hint { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+.course-table {
+    width: 100%;
+    border-collapse: collapse;
+    display: block; /* For scrolling tbody */
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.course-table thead {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    background: var(--gray-50);
+}
+.course-table tbody {
+    display: block;
+    width: 100%;
+    overflow-y: auto;
+    flex: 1;
+}
+.course-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+.course-table th, .course-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+}
+.course-table th {
+    font-weight: 600;
+    color: var(--gray-600);
+    font-size: 13px;
+}
+.course-table tbody tr:hover {
+    background: var(--gray-50);
+}
 
-button { cursor: pointer; }
+/* Column Widths */
+.w-checkbox { width: 48px; text-align: center; }
+.w-code { width: 100px; }
+.w-name { width: 25%; }
+.w-day { width: 80px; }
+.w-time { width: 120px; }
+.w-teacher { width: 100px; }
+.w-room { width: 100px; }
+.w-weeks { width: 150px; }
 
-/* 日历中的取消选择按钮 */
-.unselect-btn:hover {
-    background: rgba(239, 68, 68, 0.2) !important;
-    color: #dc2626 !important;
-} 
+/* Table Badges & Styles */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-left: 6px;
+}
+.badge-primary { background: var(--primary-light); color: var(--primary); }
+.badge-warning { background: var(--warning-bg); color: var(--warning); }
+.badge-success { background: var(--success-bg); color: var(--success); }
+.badge-gray { background: var(--gray-100); color: var(--gray-500); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+
+.row-conflict { background: #fff1f2 !important; }
+.row-selected { background: #eff6ff !important; }
+.row-required { background: #fffbeb !important; }
+
+/* Checkbox Style */
+input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+/* Footer */
+.page-footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--gray-500);
+    font-size: 12px;
+    border-top: 1px solid var(--gray-200);
+    background: white;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-400);
+}
+
+/* Responsive Design (Mobile) */
+@media (max-width: 768px) {
+    /* Global Layout */
+    .layout {
+        padding: 12px;
+        gap: 16px;
+    }
+    
+    .header-content {
+        padding: 0 12px;
+        height: auto;
+        min-height: 60px;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+    .header-actions {
+        margin-left: auto;
+    }
+    .brand h1 {
+        font-size: 16px;
+    }
+    
+    /* Stats Dashboard */
+    .stats-section {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .stat-card {
+        padding: 12px;
+        gap: 12px;
+    }
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        border-radius: 8px;
+    }
+    .stat-value {
+        font-size: 18px;
+    }
+    
+    /* Calendar Section */
+    .calendar-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .calendar-nav {
+        justify-content: space-between;
+        width: 100%;
+    }
+    .week-title {
+        min-width: auto;
+        font-size: 14px;
+    }
+    .calendar-actions {
+        justify-content: space-between;
+        width: 100%;
+    }
+    .calendar-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+    .calendar-legend {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    /* List Section Toolbar */
+    .list-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px;
+    }
+    
+    .toolbar-group {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    .action-buttons .btn {
+        flex: 1;
+    }
+    
+    .list-actions {
+        width: 100%;
+    }
+    .list-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Mobile Card Table View */
+    .list-section {
+        height: 600px; /* Keep fixed height but ensure scrolling works */
+        overflow: hidden; /* Container hidden, inner parts scroll */
+    }
+
+    .course-table {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .course-table tbody {
+        display: block;
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+    }
+    
+    .course-table tr, .course-table td {
+        display: block;
+        width: 100%;
+    }
+    
+    .course-table thead {
+        display: none; /* Hide header */
+    }
+    
+    .course-table tr {
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--gray-200);
+        padding: 0; /* Removed padding from container to simplify absolute positioning */
+        position: relative;
+        background: white;
+    }
+    
+    .course-table tbody tr:hover {
+        background: white;
+    }
+    
+    /* Checkbox absolute positioning - Left Sidebar */
+    .course-table td.w-checkbox {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 44px;
+        padding: 0;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gray-50);
+        border-right: 1px solid var(--gray-200);
+        z-index: 2;
+    }
+    input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin: 0;
+    }
+    
+    /* General Cell Styling */
+    .course-table td:not(.w-checkbox) {
+        padding: 4px 12px 4px 56px; /* 44px sidebar + 12px spacing */
+        border: none;
+        display: flex;
+        align-items: baseline;
+        font-size: 13px;
+        text-align: left;
+    }
+    
+    /* Add top/bottom padding to first/last effective content rows to simulate container padding */
+    .course-table td:nth-child(2) { padding-top: 12px; }
+    .course-table td:last-child { padding-bottom: 12px; }
+
+    .course-table td:before {
+        content: attr(data-label);
+        color: var(--gray-500);
+        width: 60px;
+        flex-shrink: 0;
+        font-size: 12px;
+    }
+    
+    .course-table td.w-checkbox:before {
+        display: none;
+    }
+    
+    /* Special handling for Name (Main Title) */
+    .course-table td.w-name {
+        font-size: 15px;
+        font-weight: 600;
+        padding-bottom: 8px;
+        padding-left: 56px; /* Ensure title also clears checkbox */
+        display: block;
+        width: 100%;
+    }
+    .course-table td.w-name:before {
+        display: none;
+    }
+    
+    /* Adjust badge container in w-weeks */
+    .w-weeks > div {
+        display: inline-block;
+    }
+}
