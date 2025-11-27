@@ -70,6 +70,12 @@ body {
 }
 .btn-primary:hover { background: var(--primary-hover); }
 
+.btn-recommend {
+    background: #8b5cf6;
+    color: white;
+}
+.btn-recommend:hover { background: #7c3aed; }
+
 .btn-secondary {
     background: var(--gray-100);
     color: var(--gray-700);

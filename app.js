@@ -92,6 +92,8 @@ let state = {
 	currentWeekNo: 1,
 	filteredCourses: COURSES,
 	searchKeyword: "",
+	recommendPlans: [], // Stores generated plans (array of Set<id>)
+	currentPlanIndex: -1
 };
 
 /* 时间/日期工具 */
@@ -156,8 +158,10 @@ const importBtn = document.getElementById('importBtn');
 const importFileInputEl = document.getElementById('importFileInput');
 const downloadImageBtn = document.getElementById('downloadImageBtn');
 const exportICSBtn = document.getElementById('exportICSBtn');
+const recommendBtn = document.getElementById('recommendBtn'); // New button
 const downloadImageBtnList = document.getElementById('downloadImageBtnList');
 const exportICSBtnList = document.getElementById('exportICSBtnList');
+const recommendBtnList = document.getElementById('recommendBtnList'); // New button
 const prevWeekBtn = document.getElementById('prevWeekBtn');
 const nextWeekBtn = document.getElementById('nextWeekBtn');
 
@@ -807,6 +811,7 @@ function importSelections(file) {
 			
 			// 更新选择状态
 			state.selectedIds = new Set(validIds);
+			state.recommendPlans = [];
 			saveToLocalStorage();
 			
 			// 重新渲染
@@ -1116,6 +1121,188 @@ function clearLocalStorage() {
 	}
 }
 
+/* 推荐方案功能 */
+function generateRecommendations() {
+	const selectedCodes = getSelectedCourseCodes();
+	if (selectedCodes.size === 0) {
+		alert("请先选择至少一门课程");
+		return false;
+	}
+
+	// 1. Group available sections by code
+	const sectionsByCode = new Map();
+	for (const code of selectedCodes) {
+		const sections = COURSES.filter(c => c.code === code);
+		if (sections.length > 0) {
+			sectionsByCode.set(code, sections);
+		}
+	}
+
+	// 2. Generate Cartesian product
+	const codes = Array.from(sectionsByCode.keys());
+	const combinations = [];
+	
+	function backtrack(index, currentSelection) {
+		if (index === codes.length) {
+			combinations.push(new Set(currentSelection));
+			return;
+		}
+		
+		const code = codes[index];
+		const sections = sectionsByCode.get(code);
+		for (const section of sections) {
+			currentSelection.push(section.id);
+			backtrack(index + 1, currentSelection);
+			currentSelection.pop();
+		}
+	}
+	
+	backtrack(0, []);
+
+	// 3. Score plans
+	const scoredPlans = combinations.map(ids => {
+		const score = calculatePlanScore(ids);
+		return { ids, score };
+	});
+
+	// 4. Sort by score desc
+	scoredPlans.sort((a, b) => b.score - a.score);
+
+    // Limit queue length to max 15
+    if (scoredPlans.length > 15) {
+        scoredPlans.length = 15;
+    }
+
+	// 5. Update state
+	// Filter out the exact current plan to ensure we switch to something else if possible, 
+    // or just keep all and let the index cycle handle it.
+    // Requirement says "Find other permutations". 
+    // Let's keep all but identify the current one to maybe skip or start after it.
+    // For simplicity, we just store all sorted plans.
+	state.recommendPlans = scoredPlans;
+	state.currentPlanIndex = -1;
+    
+    // Try to find current plan index
+    const currentIdsStr = Array.from(state.selectedIds).sort().join(',');
+    const currentPlanIdx = scoredPlans.findIndex(p => Array.from(p.ids).sort().join(',') === currentIdsStr);
+    
+    // Logic:
+    // 1. If current plan is not in list, start from beginning (-1)
+    // 2. If current plan is in list but not the best (score < max), reset to -1 to jump to best next
+    // 3. If current plan is one of the best, keep index so we cycle to next best
+    
+    if (currentPlanIdx !== -1) {
+        const maxScore = scoredPlans[0].score;
+        const currentScore = scoredPlans[currentPlanIdx].score;
+        
+        if (currentScore < maxScore) {
+            // Current plan is suboptimal, next click should show optimal
+            state.currentPlanIndex = -1;
+        } else {
+            // Current plan is optimal (or equal best), next click shows next option
+            state.currentPlanIndex = currentPlanIdx;
+        }
+    } else {
+        state.currentPlanIndex = -1;
+    }
+
+	return true;
+}
+
+function calculatePlanScore(selectedIds) {
+	let score = 100;
+	const courses = COURSES.filter(c => selectedIds.has(c.id));
+	
+	// Check conflicts
+    let conflicts = 0;
+	// Simple pair-wise check
+    // Optimizing: filter only weekend courses for conflict check as per existing logic
+    const weekendCourses = courses.filter(c => c.weekday === 6 || c.weekday === 7);
+    
+    for (let i = 0; i < weekendCourses.length; i++) {
+        for (let j = i + 1; j < weekendCourses.length; j++) {
+            const c1 = weekendCourses[i];
+            const c2 = weekendCourses[j];
+            if (c1.weekday === c2.weekday) {
+                // Check weeks overlap
+                const w1 = parseWeeks(c1.weeks);
+                const w2 = parseWeeks(c2.weeks);
+                const hasWeekOverlap = [...w1].some(w => w2.has(w));
+                if (hasWeekOverlap) {
+                    // Check time overlap
+                    if (timeRangesOverlap(c1.startTime, c1.endTime, c2.startTime, c2.endTime)) {
+                        conflicts++;
+                    }
+                }
+            }
+        }
+    }
+    
+	score -= conflicts * 100; // Heavy penalty for conflicts
+
+	// Check optimization: Same room for AM/PM on same day
+	// Group by (weekday + date/weeks?) 
+    // Simplified: Just check if same weekday courses are in same room
+    const byDay = new Map();
+    for (const c of weekendCourses) {
+        if (!byDay.has(c.weekday)) byDay.set(c.weekday, []);
+        byDay.get(c.weekday).push(c);
+    }
+    
+    for (const [day, dayCourses] of byDay) {
+        // If multiple courses on same day have same room, bonus
+        // Check pairs
+        for (let i = 0; i < dayCourses.length; i++) {
+            for (let j = i + 1; j < dayCourses.length; j++) {
+                if (dayCourses[i].room === dayCourses[j].room && dayCourses[i].room) {
+                    score += 10;
+                }
+            }
+        }
+    }
+
+	return score;
+}
+
+function applyNextRecommendation() {
+    // If no plans or user modified selection (how to track? we can check if current state matches plan)
+    // We'll rely on state.recommendPlans being cleared on manual change.
+    if (!state.recommendPlans || state.recommendPlans.length === 0) {
+        const success = generateRecommendations();
+        if (!success) return;
+    }
+    
+    if (state.recommendPlans.length <= 1) {
+        alert("当前选择没有其他可选方案");
+        return;
+    }
+
+    // Cycle to next plan
+    let nextIndex = state.currentPlanIndex + 1;
+    if (nextIndex >= state.recommendPlans.length) {
+        nextIndex = 0;
+    }
+    
+    // If next is same as current (because we looped back to start and it was the only valid one? No, checked length > 1)
+    // Just take it.
+    
+    const plan = state.recommendPlans[nextIndex];
+    state.currentPlanIndex = nextIndex;
+    state.selectedIds = new Set(plan.ids);
+    
+    saveToLocalStorage();
+    renderCourseList();
+    renderEvents();
+    updateSelectedCredit();
+    
+    const rank = nextIndex + 1;
+    const total = state.recommendPlans.length;
+    // alert(`已应用推荐方案 (${rank}/${total})\n得分: ${plan.score}`);
+    // Better UX: maybe a toast or just console log, but user asked for "show scheme from good to bad"
+    // Using alert as requested/implied for feedback
+    console.log(`Applied plan ${rank}/${total}, Score: ${plan.score}`);
+}
+
 /* 事件绑定 */
 function bindEvents() {
 	searchInputEl.addEventListener('input', () => {
@@ -1146,6 +1333,8 @@ function bindEvents() {
 				state.selectedIds.delete(id);
 			}
 			
+			// 清除推荐方案缓存
+			state.recommendPlans = [];
 			// 保存到本地存储
 			saveToLocalStorage();
 			
@@ -1157,6 +1346,7 @@ function bindEvents() {
 	});
 	clearSelectionBtn.addEventListener('click', () => {
 		state.selectedIds.clear();
+		state.recommendPlans = [];
 		saveToLocalStorage();
 		renderCourseList();
 		renderEvents();
@@ -1165,6 +1355,16 @@ function bindEvents() {
 	exportBtn.addEventListener('click', () => {
 		exportSelections();
 	});
+	if (recommendBtn) {
+		recommendBtn.addEventListener('click', () => {
+			applyNextRecommendation();
+		});
+	}
+	if (recommendBtnList) {
+		recommendBtnList.addEventListener('click', () => {
+			applyNextRecommendation();
+		});
+	}
 	importBtn.addEventListener('click', () => {
 		importFileInputEl.click();
 	});
@@ -1198,6 +1398,7 @@ function bindEvents() {
 			const courseId = Number(e.target.dataset.courseId);
 			if (courseId && state.selectedIds.has(courseId)) {
 				state.selectedIds.delete(courseId);
+				state.recommendPlans = [];
 				saveToLocalStorage();
 				// 重新渲染
 				renderCourseList();
