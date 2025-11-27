@@ -1465,6 +1465,65 @@ function init() {
 	if (loaded) {
 		console.log('已恢复上次的选课记录');
 	}
+    
+    // 初始化推荐弹窗
+    initRecommendModal();
+}
+
+function initRecommendModal() {
+    const modal = document.getElementById('recommendModal');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const modalRecommendBtn = document.getElementById('modalRecommendBtn');
+    const hasSeen = localStorage.getItem('hasSeenRecommendTip');
+
+    if (hasSeen) {
+        // 如果已经看过，确保弹窗隐藏
+        modal.style.display = 'none';
+        return;
+    }
+
+    // 显示弹窗
+    modal.style.display = 'flex';
+    // 强制重绘以触发过渡动画
+    requestAnimationFrame(() => {
+        modal.classList.add('active');
+    });
+
+    // 标记为已读
+    localStorage.setItem('hasSeenRecommendTip', 'true');
+
+    // 5秒后自动关闭
+    const autoCloseTimer = setTimeout(() => {
+        closeModal();
+    }, 5000);
+
+    function closeModal() {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300); // 等待动画结束
+        if (autoCloseTimer) clearTimeout(autoCloseTimer);
+    }
+
+    // 绑定关闭事件
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
+    // 点击遮罩层关闭
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    // 弹窗内的体验按钮
+    if (modalRecommendBtn) {
+        modalRecommendBtn.addEventListener('click', () => {
+            closeModal();
+            applyNextRecommendation();
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', init);
