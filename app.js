@@ -1392,10 +1392,11 @@ function bindEvents() {
 		}
 	});
 	calendarEl.addEventListener('click', (e) => {
-		if (e.target && e.target.matches('.unselect-btn')) {
+		const btn = e.target.closest('.unselect-btn');
+		if (btn) {
 			e.preventDefault();
 			e.stopPropagation();
-			const courseId = Number(e.target.dataset.courseId);
+			const courseId = Number(btn.dataset.courseId);
 			if (courseId && state.selectedIds.has(courseId)) {
 				state.selectedIds.delete(courseId);
 				state.recommendPlans = [];
