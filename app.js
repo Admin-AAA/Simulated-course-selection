@@ -1725,10 +1725,10 @@ function initRecommendModal() {
         localStorage.removeItem('hasSeenRecommendTip');
     }
 
-    // 5秒后自动关闭
+    // 15秒后自动关闭
     const autoCloseTimer = setTimeout(() => {
         closeModal();
-    }, 5000);
+    }, 15000);
 
     function closeModal() {
         modal.classList.remove('active');
