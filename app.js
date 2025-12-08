@@ -1269,7 +1269,6 @@ function clearLocalStorage() {
 function generateRecommendations() {
 	const selectedCodes = getSelectedCourseCodes();
 	if (selectedCodes.size === 0) {
-		alert("请先选择至少一门课程");
 		return false;
 	}
 
@@ -1304,10 +1303,13 @@ function generateRecommendations() {
 	backtrack(0, []);
 
 	// 3. Score plans
-	const scoredPlans = combinations.map(ids => {
+	let scoredPlans = combinations.map(ids => {
 		const score = calculatePlanScore(ids);
 		return { ids, score };
 	});
+
+    // Filter out scores < 80
+    scoredPlans = scoredPlans.filter(p => p.score >= 80);
 
 	// 4. Sort by score desc
 	scoredPlans.sort((a, b) => b.score - a.score);
@@ -1413,22 +1415,36 @@ function applyNextRecommendation() {
     // We'll rely on state.recommendPlans being cleared on manual change.
     if (!state.recommendPlans || state.recommendPlans.length === 0) {
         const success = generateRecommendations();
-        if (!success) return;
+        if (!success) return; // generateRecommendations 内部有 alert
+        
+        // 如果生成后还是空的（都被过滤了）
+        if (state.recommendPlans.length === 0) {
+            alert("当前选择没有评分 >= 80 的推荐方案");
+            return;
+        }
     }
     
-    if (state.recommendPlans.length <= 1) {
-        alert("当前选择没有其他可选方案");
-        return;
+    // 如果只有一个方案，且就是当前这个
+    if (state.recommendPlans.length === 1) {
+         // 检查当前是否已经是这个方案
+         const plan = state.recommendPlans[0];
+         const currentIdsStr = Array.from(state.selectedIds).sort().join(',');
+         const planIdsStr = Array.from(plan.ids).sort().join(',');
+         
+         if (currentIdsStr === planIdsStr) {
+             alert(`当前已是唯一推荐方案，得分: ${plan.score}`);
+             return;
+         }
     }
 
     // Cycle to next plan
     let nextIndex = state.currentPlanIndex + 1;
+    let message = "";
+    
     if (nextIndex >= state.recommendPlans.length) {
         nextIndex = 0;
+        message = "没有更多更好方案了，已回到第一个推荐方案。\n";
     }
-    
-    // If next is same as current (because we looped back to start and it was the only valid one? No, checked length > 1)
-    // Just take it.
     
     const plan = state.recommendPlans[nextIndex];
     state.currentPlanIndex = nextIndex;
@@ -1441,10 +1457,9 @@ function applyNextRecommendation() {
     
     const rank = nextIndex + 1;
     const total = state.recommendPlans.length;
-    // alert(`已应用推荐方案 (${rank}/${total})\n得分: ${plan.score}`);
-    // Better UX: maybe a toast or just console log, but user asked for "show scheme from good to bad"
-    // Using alert as requested/implied for feedback
-    console.log(`Applied plan ${rank}/${total}, Score: ${plan.score}`);
+    
+    // 提示用户
+    alert(`${message}当前方案 (${rank}/${total}) 得分: ${plan.score}`);
 }
 
 function refreshCalendar() {
