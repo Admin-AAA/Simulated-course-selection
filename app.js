@@ -93,7 +93,10 @@ let state = {
 	filteredCourses: COURSES,
 	searchKeyword: "",
 	recommendPlans: [], // Stores generated plans (array of Set<id>)
-	currentPlanIndex: -1
+	currentPlanIndex: -1,
+    isCompressed: false,
+    compressedGroups: [],
+    isListCompressed: true
 };
 
 /* 时间/日期工具 */
@@ -157,6 +160,8 @@ const exportBtn = document.getElementById('exportBtn');
 const importBtn = document.getElementById('importBtn');
 const importFileInputEl = document.getElementById('importFileInput');
 const downloadImageBtn = document.getElementById('downloadImageBtn');
+const toggleCompressBtn = document.getElementById('toggleCompressBtn');
+const toggleListCompressBtn = document.getElementById('toggleListCompressBtn');
 const exportICSBtn = document.getElementById('exportICSBtn');
 const recommendBtn = document.getElementById('recommendBtn'); // New button
 const downloadImageBtnList = document.getElementById('downloadImageBtnList');
@@ -170,9 +175,63 @@ const requiredProgressEl = document.getElementById('requiredProgress');
 const gpaDisplayEl = document.getElementById('gpaDisplay');
 const conflictDisplayEl = document.getElementById('conflictDisplay');
 
+/* 压缩视图逻辑 */
+function calculateCompressedWeeks() {
+    if (!state.isCompressed) {
+        return Array.from({length: MAX_WEEKS}, (_, i) => ({
+            start: i + 1,
+            end: i + 1,
+            label: `第${i + 1}周`
+        }));
+    }
+
+    const weekSignatures = [];
+    for (let w = 1; w <= MAX_WEEKS; w++) {
+        // Find all courses active in this week
+        const activeCourses = [];
+        for (const id of state.selectedIds) {
+            const c = COURSES.find(x => x.id === id);
+            if (c && isCourseInWeek(c, w) && (c.weekday === 6 || c.weekday === 7)) {
+                activeCourses.push(c.id);
+            }
+        }
+        activeCourses.sort();
+        weekSignatures.push({ week: w, signature: activeCourses.join(',') });
+    }
+
+    const groups = [];
+    if (weekSignatures.length === 0) return [];
+
+    let currentGroup = { start: weekSignatures[0].week, end: weekSignatures[0].week, signature: weekSignatures[0].signature };
+    
+    for (let i = 1; i < weekSignatures.length; i++) {
+        const ws = weekSignatures[i];
+        if (ws.signature === currentGroup.signature) {
+            currentGroup.end = ws.week;
+        } else {
+            groups.push(currentGroup);
+            currentGroup = { start: ws.week, end: ws.week, signature: ws.signature };
+        }
+    }
+    groups.push(currentGroup);
+    
+    // Add labels
+    groups.forEach(g => {
+        g.label = g.start === g.end ? `第${g.start}周` : `第${g.start}-${g.end}周`;
+    });
+    
+    return groups;
+}
+
 /* 渲染：周末专用日历栅格 */
 function renderCalendarGrid() {
 	calendarEl.innerHTML = '';
+    
+    state.compressedGroups = calculateCompressedWeeks();
+    const groups = state.compressedGroups;
+    
+    // Update grid columns
+    calendarEl.style.gridTemplateColumns = `80px repeat(${groups.length * 2}, 180px)`;
 	
     // 左上角空块
 	const corner = document.createElement('div');
@@ -186,25 +245,32 @@ function renderCalendarGrid() {
 	calendarEl.appendChild(corner);
 	
 	// 生成周次×周末列标题
-	for (let week = 1; week <= MAX_WEEKS; week++) {
-		const weekStart = getWeekStartByNo(week);
+	groups.forEach((group, index) => {
+        // For compressed view, we don't show specific dates if it spans multiple weeks
+        // Or we show the date of the first week?
+        // User requirement: "周上方描述好当前是第几周-第几周"
+        
+        const weekStart = getWeekStartByNo(group.start);
 		const satDate = dayjs(weekStart).add(4, 'day'); // 周六
 		const sunDate = dayjs(weekStart).add(5, 'day'); // 周日
-		
+        
+        const dateLabelSat = group.start === group.end ? `${satDate.format('M/DD')} 周六` : '周六';
+        const dateLabelSun = group.start === group.end ? `${sunDate.format('M/DD')} 周日` : '周日';
+
 		const satHeader = document.createElement('div');
 		satHeader.className = 'day-header';
-		satHeader.innerHTML = `<div>第${week}周</div><div style="font-weight:400;margin-top:2px;">${satDate.format('M/DD')} 周六</div>`;
-		satHeader.dataset.week = String(week);
+		satHeader.innerHTML = `<div>${group.label}</div><div style="font-weight:400;margin-top:2px;">${dateLabelSat}</div>`;
+		satHeader.dataset.groupIndex = String(index);
 		satHeader.dataset.day = '6';
 		calendarEl.appendChild(satHeader);
 		
 		const sunHeader = document.createElement('div');
 		sunHeader.className = 'day-header';
-		sunHeader.innerHTML = `<div>第${week}周</div><div style="font-weight:400;margin-top:2px;">${sunDate.format('M/DD')} 周日</div>`;
-		sunHeader.dataset.week = String(week);
+		sunHeader.innerHTML = `<div>${group.label}</div><div style="font-weight:400;margin-top:2px;">${dateLabelSun}</div>`;
+		sunHeader.dataset.groupIndex = String(index);
 		sunHeader.dataset.day = '7';
 		calendarEl.appendChild(sunHeader);
-	}
+	});
 	
 	// 上午/下午/晚上行
 	const timeSlots = [
@@ -219,16 +285,16 @@ function renderCalendarGrid() {
 		timeCell.innerHTML = `<div style="text-align:center;"><div>${slot.label}</div><div style="font-size:10px;opacity:0.8;margin-top:4px;">${slot.time}</div></div>`;
 		calendarEl.appendChild(timeCell);
 		
-		for (let week = 1; week <= MAX_WEEKS; week++) {
+		groups.forEach((group, index) => {
 			for (let day = 6; day <= 7; day++) {
 				const cell = document.createElement('div');
 				cell.className = 'cell';
-				cell.dataset.week = String(week);
+				cell.dataset.groupIndex = String(index);
 				cell.dataset.day = String(day);
 				cell.dataset.slot = slot.key;
 				calendarEl.appendChild(cell);
 			}
-		}
+		});
 	}
 }
 
@@ -271,27 +337,30 @@ function renderEvents() {
 	oldEvents.forEach(e => e.remove());
 
 	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id));
-	// 按周次×天×时段分组
-	const byWeekDaySlot = new Map();
-	for (const c of selectedCourses) {
-		if (c.weekday !== 6 && c.weekday !== 7) continue; // 只处理周末
-		const weekSet = parseWeeks(c.weeks);
-		if (weekSet.size === 0) continue; // 跳过无周次信息的课程
-		
-		for (const weekNo of weekSet) {
-			const slot = getTimeSlot(c.startTime);
-			const key = `${weekNo}-${c.weekday}-${slot}`;
-			if (!byWeekDaySlot.has(key)) byWeekDaySlot.set(key, []);
-			byWeekDaySlot.get(key).push(c);
-		}
-	}
+	// 按 GroupIndex×天×时段分组
+	const byGroupDaySlot = new Map();
+    
+    state.compressedGroups.forEach((group, groupIndex) => {
+        // Find courses active in this group (check start week)
+        const activeInGroup = selectedCourses.filter(c => 
+            (c.weekday === 6 || c.weekday === 7) && 
+            isCourseInWeek(c, group.start)
+        );
+        
+        for (const c of activeInGroup) {
+            const slot = getTimeSlot(c.startTime);
+            const key = `${groupIndex}-${c.weekday}-${slot}`;
+            if (!byGroupDaySlot.has(key)) byGroupDaySlot.set(key, []);
+            byGroupDaySlot.get(key).push(c);
+        }
+    });
 	
-	for (const [key, courses] of byWeekDaySlot) {
-		const [weekNo, day, slot] = key.split('-');
+	for (const [key, courses] of byGroupDaySlot) {
+		const [groupIndex, day, slot] = key.split('-');
 		const groups = groupOverlaps(courses);
 		
 		for (const group of groups) {
-			const cell = calendarEl.querySelector(`.cell[data-week="${weekNo}"][data-day="${day}"][data-slot="${slot}"]`);
+			const cell = calendarEl.querySelector(`.cell[data-group-index="${groupIndex}"][data-day="${day}"][data-slot="${slot}"]`);
 			if (!cell) continue;
 			
 			const block = document.createElement('div');
@@ -360,7 +429,80 @@ function renderEvents() {
 /* 渲染：课程列表 */
 function renderCourseList() {
 	const selectedCodes = getSelectedCourseCodes();
-	const rows = state.filteredCourses.map(c => {
+    
+    if (state.isListCompressed) {
+        // 分组渲染逻辑
+        const groups = new Map();
+        state.filteredCourses.forEach(c => {
+            if (!groups.has(c.code)) {
+                groups.set(c.code, []);
+            }
+            groups.get(c.code).push(c);
+        });
+        
+        let html = '';
+        if (groups.size === 0) {
+            html = `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:32px;">无搜索结果</td></tr>`;
+        } else {
+            for (const [code, courses] of groups) {
+                const first = courses[0];
+                // 检查该组是否有选中的课程
+                const selectedInGroup = courses.filter(c => state.selectedIds.has(c.id));
+                const isSelected = selectedInGroup.length > 0;
+                const checked = isSelected ? 'checked' : '';
+                
+                // 组头行
+                const requiredGroup = isRequiredCourse(code);
+                const credit = CODE_TO_CREDIT[code] ?? first.credit ?? '';
+                const requiredBadge = requiredGroup ? `<span class="badge badge-warning">${requiredGroup.description}</span>` : '';
+                const gpaBadge = first.gpa === true ? '<span class="badge badge-success">GPA</span>' : 
+                                first.gpa === false ? '<span class="badge badge-gray">非GPA</span>' : '';
+                
+                // 如果已选，显示选了哪个（如果选了多个，显示数量）
+                let statusHtml = '';
+                if (isSelected) {
+                    if (selectedInGroup.length === 1) {
+                        const s = selectedInGroup[0];
+                        statusHtml = `<span class="badge badge-primary">已选: ${escapeHtml(s.teacher)} (${formatTimeRange(s.startTime, s.endTime)})</span>`;
+                    } else {
+                        statusHtml = `<span class="badge badge-primary">已选 ${selectedInGroup.length} 个班次</span>`;
+                    }
+                } else {
+                    statusHtml = `<span style="color:var(--gray-500);font-size:12px;">可选 ${courses.length} 个班次</span>`;
+                }
+                
+                html += `
+                    <tr class="group-row ${isSelected ? 'row-selected' : ''}" data-code="${code}">
+                        <td class="w-checkbox">
+                            <input type="checkbox" class="group-checkbox" data-code="${code}" ${checked}>
+                        </td>
+                        <td class="w-code" data-label="代码">${escapeHtml(code)}</td>
+                        <td class="w-name" data-label="课程名">
+                            <div style="font-weight:500;">${escapeHtml(first.name)}</div>
+                        </td>
+                        <td colspan="5" data-label="状态">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                ${statusHtml}
+                                ${requiredBadge}
+                                ${gpaBadge}
+                                <span class="badge badge-gray">${credit}学分</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        courseTbodyEl.innerHTML = html;
+    } else {
+        // 原始渲染逻辑
+        const rows = renderCourseRows(state.filteredCourses, selectedCodes, false);
+        courseTbodyEl.innerHTML = rows || `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:32px;">无搜索结果</td></tr>`;
+    }
+	updateSelectedCredit();
+}
+
+function renderCourseRows(courses, selectedCodes, isGrouped) {
+    return courses.map(c => {
 		const isSelected = state.selectedIds.has(c.id);
 		const canSelect = isSelected || canSelectCourse(c.id);
 		const checked = isSelected ? 'checked' : '';
@@ -381,6 +523,10 @@ function renderCourseList() {
         } else if (requiredGroup) {
 			rowClass = 'class="row-required"';
 		}
+        
+        // 如果是分组模式，稍微缩进，并且可能隐藏某些重复信息（如代码、名称）
+        // 但为了清晰，保留所有列，只是背景色可能区分
+        const indentStyle = isGrouped ? 'style="background-color:white;"' : '';
 		
 		const duplicateHint = selectedCodes.has(c.code) && !isSelected ? '<div style="font-size:11px;color:var(--danger);margin-top:2px;">已选同名课程</div>' : '';
 		const conflictHint = hasConflict && !isSelected ? '<span class="badge badge-danger">冲突</span>' : '';
@@ -389,8 +535,8 @@ function renderCourseList() {
 						c.gpa === false ? '<span class="badge badge-gray">非GPA</span>' : '';
 		
 		return `
-			<tr ${rowClass}>
-				<td class="w-checkbox"><input type="checkbox" data-id="${c.id}" ${checked} ${disabled}></td>
+			<tr ${rowClass} ${indentStyle}>
+				<td class="w-checkbox" ${isGrouped ? 'style="padding-left:24px;"' : ''}><input type="checkbox" data-id="${c.id}" ${checked} ${disabled}></td>
 				<td class="w-code" data-label="代码">${escapeHtml(c.code || '')}</td>
 				<td class="w-name" data-label="课程名">
                     <div style="font-weight:500;">${escapeHtml(c.name)}</div>
@@ -410,8 +556,6 @@ function renderCourseList() {
 			</tr>
 		`;
 	}).join('');
-	courseTbodyEl.innerHTML = rows || `<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:32px;">无搜索结果</td></tr>`;
-	updateSelectedCredit();
 }
 
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
@@ -816,7 +960,7 @@ function importSelections(file) {
 			
 			// 重新渲染
 			renderCourseList();
-			renderEvents();
+			refreshCalendar();
 			updateSelectedCredit();
 			
 			// 计算实际导入的学分信息
@@ -1292,7 +1436,7 @@ function applyNextRecommendation() {
     
     saveToLocalStorage();
     renderCourseList();
-    renderEvents();
+    refreshCalendar();
     updateSelectedCredit();
     
     const rank = nextIndex + 1;
@@ -1301,6 +1445,13 @@ function applyNextRecommendation() {
     // Better UX: maybe a toast or just console log, but user asked for "show scheme from good to bad"
     // Using alert as requested/implied for feedback
     console.log(`Applied plan ${rank}/${total}, Score: ${plan.score}`);
+}
+
+function refreshCalendar() {
+    if (state.isCompressed) {
+        renderCalendarGrid();
+    }
+    renderEvents();
 }
 
 /* 事件绑定 */
@@ -1313,6 +1464,36 @@ function bindEvents() {
 	});
 	courseTbodyEl.addEventListener('change', (e) => {
 		const t = e.target;
+        
+        // 处理压缩视图的组复选框
+        if (t && t.classList.contains('group-checkbox')) {
+            const code = t.dataset.code;
+            const groupCourses = state.filteredCourses.filter(c => c.code === code);
+            
+            if (groupCourses.length === 0) return;
+
+            if (t.checked) {
+                // 选中：默认选第一个
+                // 清理同代码的其他选择（单选逻辑）
+                const allCoursesWithCode = COURSES.filter(c => c.code === code);
+                allCoursesWithCode.forEach(c => state.selectedIds.delete(c.id));
+                
+                // 选中该组第一个
+                state.selectedIds.add(groupCourses[0].id);
+            } else {
+                // 取消选中：清除该组所有已选
+                const allCoursesWithCode = COURSES.filter(c => c.code === code);
+                allCoursesWithCode.forEach(c => state.selectedIds.delete(c.id));
+            }
+            
+            state.recommendPlans = [];
+            saveToLocalStorage();
+            renderCourseList();
+            refreshCalendar();
+            updateSelectedCredit();
+            return;
+        }
+
 		if (t && t.matches('input[type="checkbox"][data-id]')) {
 			const id = Number(t.dataset.id);
 			
@@ -1340,7 +1521,7 @@ function bindEvents() {
 			
 			// 重新渲染以更新可选状态
 			renderCourseList();
-			renderEvents();
+			refreshCalendar();
 			updateSelectedCredit();
 		}
 	});
@@ -1349,12 +1530,38 @@ function bindEvents() {
 		state.recommendPlans = [];
 		saveToLocalStorage();
 		renderCourseList();
-		renderEvents();
+		refreshCalendar();
 		updateSelectedCredit();
 	});
 	exportBtn.addEventListener('click', () => {
 		exportSelections();
 	});
+    if (toggleCompressBtn) {
+        toggleCompressBtn.addEventListener('click', () => {
+            state.isCompressed = !state.isCompressed;
+            toggleCompressBtn.innerHTML = state.isCompressed ? 
+                '<i class="ri-expand-left-right-line"></i> 原始视图' : 
+                '<i class="ri-contract-left-right-line"></i> 压缩视图';
+            toggleCompressBtn.classList.toggle('btn-primary', state.isCompressed);
+            toggleCompressBtn.classList.toggle('btn-outline', !state.isCompressed);
+            
+            renderCalendarGrid();
+            renderEvents();
+        });
+    }
+    if (toggleListCompressBtn) {
+        toggleListCompressBtn.addEventListener('click', () => {
+            state.isListCompressed = !state.isListCompressed;
+            toggleListCompressBtn.innerHTML = state.isListCompressed ? 
+                '<i class="ri-expand-left-right-line"></i> 原始视图' : 
+                '<i class="ri-contract-left-right-line"></i> 压缩视图';
+            toggleListCompressBtn.classList.toggle('btn-primary', state.isListCompressed);
+            toggleListCompressBtn.classList.toggle('btn-outline', !state.isListCompressed);
+            
+            renderCourseList();
+        });
+    }
+    // 移除旧的组头点击事件
 	if (recommendBtn) {
 		recommendBtn.addEventListener('click', () => {
 			applyNextRecommendation();
@@ -1403,7 +1610,7 @@ function bindEvents() {
 				saveToLocalStorage();
 				// 重新渲染
 				renderCourseList();
-				renderEvents();
+				refreshCalendar();
 				updateSelectedCredit();
 			}
 		}
@@ -1413,7 +1620,10 @@ function bindEvents() {
 		state.currentWeekStart = getWeekStartByNo(state.currentWeekNo);
 		saveToLocalStorage();
 		updateWeekTitle();
-		renderCalendarGrid();
+		// renderCalendarGrid(); // No need to re-render grid on week change unless we want to highlight? 
+        // Actually original code did re-render. But grid is static 1-18.
+        // If compressed, grid depends on selection, not currentWeekNo.
+        // So we don't need to re-render grid here.
 		renderEvents();
 		updateSelectedCredit();
 	});
@@ -1422,7 +1632,7 @@ function bindEvents() {
 		state.currentWeekStart = getWeekStartByNo(state.currentWeekNo);
 		saveToLocalStorage();
 		updateWeekTitle();
-		renderCalendarGrid();
+		// renderCalendarGrid();
 		renderEvents();
 		updateSelectedCredit();
 	});
@@ -1467,6 +1677,15 @@ function init() {
 		console.log('已恢复上次的选课记录');
 	}
     
+    // 初始化列表压缩按钮状态
+    if (toggleListCompressBtn) {
+        toggleListCompressBtn.innerHTML = state.isListCompressed ? 
+            '<i class="ri-expand-left-right-line"></i> 原始视图' : 
+            '<i class="ri-contract-left-right-line"></i> 压缩视图';
+        toggleListCompressBtn.classList.toggle('btn-primary', state.isListCompressed);
+        toggleListCompressBtn.classList.toggle('btn-outline', !state.isListCompressed);
+    }
+    
     // 初始化推荐弹窗
     initRecommendModal();
 }
@@ -1475,10 +1694,18 @@ function initRecommendModal() {
     const modal = document.getElementById('recommendModal');
     const closeBtn = document.getElementById('closeModalBtn');
     const modalRecommendBtn = document.getElementById('modalRecommendBtn');
-    const hasSeen = localStorage.getItem('hasSeenRecommendTip');
+    
+    // 修改为前5次打开都会弹出
+    let viewCount = parseInt(localStorage.getItem('recommendTipViewCount') || '0');
+    const hasSeenLegacy = localStorage.getItem('hasSeenRecommendTip');
 
-    if (hasSeen) {
-        // 如果已经看过，确保弹窗隐藏
+    // 兼容旧数据：如果以前标记过已读，视为已看1次
+    if (viewCount === 0 && hasSeenLegacy) {
+        viewCount = 1;
+    }
+
+    if (viewCount >= 5) {
+        // 超过5次不再显示
         modal.style.display = 'none';
         return;
     }
@@ -1490,8 +1717,13 @@ function initRecommendModal() {
         modal.classList.add('active');
     });
 
-    // 标记为已读
-    localStorage.setItem('hasSeenRecommendTip', 'true');
+    // 计数加1并保存
+    viewCount++;
+    localStorage.setItem('recommendTipViewCount', viewCount.toString());
+    // 清理旧标记
+    if (hasSeenLegacy) {
+        localStorage.removeItem('hasSeenRecommendTip');
+    }
 
     // 5秒后自动关闭
     const autoCloseTimer = setTimeout(() => {
