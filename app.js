@@ -94,7 +94,7 @@ let state = {
 	searchKeyword: "",
 	recommendPlans: [], // Stores generated plans (array of Set<id>)
 	currentPlanIndex: -1,
-    isCompressed: false,
+    isCompressed: true,
     compressedGroups: [],
     isListCompressed: true
 };
@@ -1314,9 +1314,9 @@ function generateRecommendations() {
 	// 4. Sort by score desc
 	scoredPlans.sort((a, b) => b.score - a.score);
 
-    // Limit queue length to max 15
-    if (scoredPlans.length > 15) {
-        scoredPlans.length = 15;
+    // Limit queue length to max 10
+    if (scoredPlans.length > 10) {
+        scoredPlans.length = 10;
     }
 
 	// 5. Update state
@@ -1699,6 +1699,15 @@ function init() {
             '<i class="ri-contract-left-right-line"></i> 压缩视图';
         toggleListCompressBtn.classList.toggle('btn-primary', state.isListCompressed);
         toggleListCompressBtn.classList.toggle('btn-outline', !state.isListCompressed);
+    }
+
+    // 初始化日历压缩按钮状态
+    if (toggleCompressBtn) {
+        toggleCompressBtn.innerHTML = state.isCompressed ? 
+            '<i class="ri-expand-left-right-line"></i> 原始视图' : 
+            '<i class="ri-contract-left-right-line"></i> 压缩视图';
+        toggleCompressBtn.classList.toggle('btn-primary', state.isCompressed);
+        toggleCompressBtn.classList.toggle('btn-outline', !state.isCompressed);
     }
     
     // 初始化推荐弹窗
