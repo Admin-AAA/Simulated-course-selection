@@ -96,7 +96,8 @@ let state = {
 	currentPlanIndex: -1,
     isCompressed: true,
     compressedGroups: [],
-    isListCompressed: true
+    isListCompressed: true,
+    expandedGroups: new Set()
 };
 
 /* 时间/日期工具 */
@@ -491,7 +492,8 @@ function renderCourseList() {
                     }
 
                     // 星期/时间
-                    displayData.weekday = `<span style="color:var(--gray-500)">-</span>`;
+                    const weekdays = [...new Set(courses.map(c => c.weekday))].sort();
+                    displayData.weekday = weekdays.map(weekdayLabel).join(', ');
                     displayData.time = `<span style="color:var(--gray-500);font-size:12px">可选 ${courses.length} 个班次</span>`;
                 }
 
@@ -501,12 +503,19 @@ function renderCourseList() {
                                 first.gpa === false ? '<span class="badge badge-gray">非GPA</span>' : '';
                 const creditBadge = `<span class="badge badge-gray">${credit}学分</span>`;
                 
+                const isExpanded = state.expandedGroups.has(code);
+                const expandIcon = isExpanded ? '<i class="ri-arrow-down-s-line"></i>' : '<i class="ri-arrow-right-s-line"></i>';
+
                 html += `
-                    <tr class="group-row ${isSelected ? 'row-selected' : ''}" data-code="${code}">
+                    <tr class="group-row ${isSelected ? 'row-selected' : ''}" data-code="${code}" style="cursor:pointer;">
                         <td class="w-checkbox">
                             <input type="checkbox" class="group-checkbox" data-code="${code}" ${checked}>
                         </td>
-                        <td class="w-code" data-label="代码">${escapeHtml(code)}</td>
+                        <td class="w-code" data-label="代码">
+                            <div style="display:flex;align-items:center;gap:4px;">
+                                ${expandIcon} ${escapeHtml(code)}
+                            </div>
+                        </td>
                         <td class="w-name" data-label="课程名">
                             <div style="font-weight:500;">${escapeHtml(first.name)}</div>
                             <div style="display:flex;gap:4px;margin-top:2px;flex-wrap:wrap;">${requiredBadge}${gpaBadge}${creditBadge}</div>
@@ -518,6 +527,10 @@ function renderCourseList() {
                         <td class="w-weeks" data-label="周次">${displayData.weeks}</td>
                     </tr>
                 `;
+
+                if (isExpanded) {
+                    html += renderCourseRows(courses, selectedCodes, true);
+                }
             }
         }
         courseTbodyEl.innerHTML = html;
@@ -554,7 +567,7 @@ function renderCourseRows(courses, selectedCodes, isGrouped) {
         
         // 如果是分组模式，稍微缩进，并且可能隐藏某些重复信息（如代码、名称）
         // 但为了清晰，保留所有列，只是背景色可能区分
-        const indentStyle = isGrouped ? 'style="background-color:white;"' : '';
+        const indentStyle = isGrouped ? 'style="background-color:var(--gray-50);"' : '';
 		
 		const duplicateHint = selectedCodes.has(c.code) && !isSelected ? '<div style="font-size:11px;color:var(--danger);margin-top:2px;">已选同名课程</div>' : '';
 		const conflictHint = hasConflict && !isSelected ? '<span class="badge badge-danger">冲突</span>' : '';
@@ -1505,6 +1518,20 @@ function bindEvents() {
 		applyFilter();
 		renderCourseList();
 	});
+    courseTbodyEl.addEventListener('click', (e) => {
+        // 处理行展开/折叠
+        const groupRow = e.target.closest('.group-row');
+        // 如果点击的是复选框或其容器，不触发展开
+        if (groupRow && !e.target.closest('.w-checkbox') && !e.target.matches('input')) {
+            const code = groupRow.dataset.code;
+            if (state.expandedGroups.has(code)) {
+                state.expandedGroups.delete(code);
+            } else {
+                state.expandedGroups.add(code);
+            }
+            renderCourseList();
+        }
+    });
 	courseTbodyEl.addEventListener('change', (e) => {
 		const t = e.target;
         
