@@ -454,22 +454,52 @@ function renderCourseList() {
                 // 组头行
                 const requiredGroup = isRequiredCourse(code);
                 const credit = CODE_TO_CREDIT[code] ?? first.credit ?? '';
+                
+                // 准备显示的数据
+                let displayData = {
+                    weekday: '',
+                    time: '',
+                    teacher: '',
+                    room: '',
+                    weeks: ''
+                };
+
+                if (isSelected && selectedInGroup.length === 1) {
+                    // 单选状态：显示选中课程的信息
+                    const s = selectedInGroup[0];
+                    displayData.weekday = weekdayLabel(s.weekday);
+                    displayData.time = formatTimeRange(s.startTime, s.endTime);
+                    displayData.teacher = escapeHtml(s.teacher || '');
+                    displayData.room = escapeHtml(s.room || '');
+                    displayData.weeks = escapeHtml(s.weeks || '');
+                } else {
+                    // 未选或多选：显示汇总信息
+                    // 老师去重
+                    const teachers = [...new Set(courses.map(c => c.teacher).filter(Boolean))];
+                    displayData.teacher = teachers.map(escapeHtml).join(', ');
+                    
+                    // 教室去重
+                    const rooms = [...new Set(courses.map(c => c.room).filter(Boolean))];
+                    displayData.room = rooms.map(escapeHtml).join(', ');
+                    
+                    // 周次
+                    const allWeeks = [...new Set(courses.map(c => c.weeks))];
+                    if (allWeeks.length === 1) {
+                        displayData.weeks = escapeHtml(allWeeks[0]);
+                    } else {
+                        displayData.weeks = `<span style="color:var(--gray-500);font-size:12px">多个班次</span>`;
+                    }
+
+                    // 星期/时间
+                    displayData.weekday = `<span style="color:var(--gray-500)">-</span>`;
+                    displayData.time = `<span style="color:var(--gray-500);font-size:12px">可选 ${courses.length} 个班次</span>`;
+                }
+
+                // 徽章
                 const requiredBadge = requiredGroup ? `<span class="badge badge-warning">${requiredGroup.description}</span>` : '';
                 const gpaBadge = first.gpa === true ? '<span class="badge badge-success">GPA</span>' : 
                                 first.gpa === false ? '<span class="badge badge-gray">非GPA</span>' : '';
-                
-                // 如果已选，显示选了哪个（如果选了多个，显示数量）
-                let statusHtml = '';
-                if (isSelected) {
-                    if (selectedInGroup.length === 1) {
-                        const s = selectedInGroup[0];
-                        statusHtml = `<span class="badge badge-primary">已选: ${escapeHtml(s.teacher)} (${formatTimeRange(s.startTime, s.endTime)})</span>`;
-                    } else {
-                        statusHtml = `<span class="badge badge-primary">已选 ${selectedInGroup.length} 个班次</span>`;
-                    }
-                } else {
-                    statusHtml = `<span style="color:var(--gray-500);font-size:12px;">可选 ${courses.length} 个班次</span>`;
-                }
+                const creditBadge = `<span class="badge badge-gray">${credit}学分</span>`;
                 
                 html += `
                     <tr class="group-row ${isSelected ? 'row-selected' : ''}" data-code="${code}">
@@ -479,15 +509,13 @@ function renderCourseList() {
                         <td class="w-code" data-label="代码">${escapeHtml(code)}</td>
                         <td class="w-name" data-label="课程名">
                             <div style="font-weight:500;">${escapeHtml(first.name)}</div>
+                            <div style="display:flex;gap:4px;margin-top:2px;flex-wrap:wrap;">${requiredBadge}${gpaBadge}${creditBadge}</div>
                         </td>
-                        <td colspan="5" data-label="状态">
-                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                                ${statusHtml}
-                                ${requiredBadge}
-                                ${gpaBadge}
-                                <span class="badge badge-gray">${credit}学分</span>
-                            </div>
-                        </td>
+                        <td class="w-day" data-label="星期">${displayData.weekday}</td>
+                        <td class="w-time" data-label="时间">${displayData.time}</td>
+                        <td class="w-teacher" data-label="老师">${displayData.teacher}</td>
+                        <td class="w-room" data-label="教室">${displayData.room}</td>
+                        <td class="w-weeks" data-label="周次">${displayData.weeks}</td>
                     </tr>
                 `;
             }
