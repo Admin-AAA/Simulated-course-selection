@@ -1,5 +1,5 @@
 /* 全局常量与工具 */
-const TERM_ANCHOR_STR = '2025-09-20'; // 第一周锚点（周次从此日所在周计为第1周）
+const TERM_ANCHOR_STR = '2026-03-02'; // 第一周锚点（周次从此日所在周计为第1周）
 const MAX_WEEKS = 18; // 最大周数
 
 // 学分映射（课程代码 -> 学分）
@@ -50,44 +50,27 @@ const REQUIRED_GROUPS = {
 // Excel 固化数据：示例结构。若你提供真实字段名，可替换。
 // 字段：id, name, weekday(1-7, 周一为1), startTime("HH:mm"), endTime("HH:mm"), teacher, room
 const COURSES = [
-	{ id: 1, code: "GE6001", name: "学术写作、规范与伦理", className: "GE6001-03000-S01-PT", credit: 1, firstDate: "2025-12-27", teacher: "李红兵", capacity: 100, weeks: "15-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: true },
-	{ id: 2, code: "GE6001", name: "学术写作、规范与伦理", className: "GE6001-03000-S02-PT", credit: 1, firstDate: "2025-12-28", teacher: "李红兵", capacity: 100, weeks: "15-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼200", gpa: true },
-	{ id: 3, code: "GE6001", name: "学术写作、规范与伦理", className: "GE6001-03000-S03-PT", credit: 1, firstDate: "2025-12-28", teacher: "李红兵", capacity: 100, weeks: "15-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: true },
-	{ id: 4, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S01-PT", credit: 3, firstDate: "2025-09-20", teacher: "周钢", capacity: 70, weeks: "1-2,5-14周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼100", gpa: true },
-	{ id: 5, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S02-PT", credit: 3, firstDate: "2025-09-21", teacher: "周钢", capacity: 70, weeks: "1,4-14周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼100", gpa: true },
-	{ id: 6, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S03-PT", credit: 3, firstDate: "2025-09-21", teacher: "周钢", capacity: 70, weeks: "1,4-14周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼100", gpa: true },
-	{ id: 7, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S04-PT", credit: 3, firstDate: "2025-09-21", teacher: "潘常春", capacity: 60, weeks: "1,4-14周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼125", gpa: true },
-	{ id: 8, code: "MEM6002", name: "工程管理导论", className: "MEM6002-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "全林", capacity: 100, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼400", gpa: true },
-	{ id: 9, code: "MEM6003", name: "工程经济学", className: "MEM6003-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "殷翔", capacity: 100, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼300", gpa: true },
-	{ id: 10, code: "MEM6003", name: "工程经济学", className: "MEM6003-03000-S02-PT", credit: 2, firstDate: "2025-09-20", teacher: "殷翔", capacity: 100, weeks: "1-2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼300", gpa: true },
-	{ id: 11, code: "MEM6003", name: "工程经济学", className: "MEM6003-03000-S03-PT", credit: 2, firstDate: "2025-11-30", teacher: "杨忠直", capacity: 100, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼400", gpa: true },
-	{ id: 12, code: "MEM6005", name: "质量与可靠性管理", className: "MEM6005-03000-S01-PT", credit: 2, firstDate: "2025-09-21", teacher: "苗瑞", capacity: 80, weeks: "1,4-10周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: true },
-	{ id: 13, code: "MEM6005", name: "质量与可靠性管理", className: "MEM6005-03000-S02-PT", credit: 2, firstDate: "2025-11-29", teacher: "苗瑞", capacity: 80, weeks: "11-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼410", gpa: true },
-	{ id: 14, code: "MEM6005", name: "质量与可靠性管理", className: "MEM6005-03000-S03-PT", credit: 2, firstDate: "2025-11-30", teacher: "苗瑞", capacity: 80, weeks: "11-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼410", gpa: true },
-	{ id: 15, code: "MEM6006", name: "工程信息管理", className: "MEM6006-03000-S01-PT", credit: 2, firstDate: "2025-09-21", teacher: "蔡鸿明", capacity: 100, weeks: "1,4-10周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼400", gpa: true },
-	{ id: 16, code: "MEM6006", name: "工程信息管理", className: "MEM6006-03000-S02-PT", credit: 2, firstDate: "2025-11-29", teacher: "刘雨桐", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼300", gpa: true },
-	{ id: 17, code: "MEM6301", name: "人力资源与沟通管理", className: "MEM6301-03000-S01-PT", credit: 2, firstDate: "2025-11-30", teacher: "陶祁", capacity: 70, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: true },
-	{ id: 18, code: "MEM6302", name: "领导力", className: "MEM6302-03000-S01-PT", credit: 2, firstDate: "2025-11-30", teacher: "张兴福", capacity: 100, weeks: "11-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼400", gpa: true },
-	{ id: 19, code: "MEM6304", name: "库存与供应链管理", className: "MEM6304-03000-S01-PT", credit: 2, firstDate: "2025-11-30", teacher: "张文杰", capacity: 50, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼308", gpa: true },
-	{ id: 20, code: "MEM6304", name: "库存与供应链管理", className: "MEM6304-03000-S02-PT", credit: 2, firstDate: "2025-11-30", teacher: "张文杰", capacity: 50, weeks: "11-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼308", gpa: true },
-	{ id: 21, code: "MEM6305", name: "风险管理与高效决策", className: "MEM6305-03000-S01-PT", credit: 2, firstDate: "2025-09-21", teacher: "王春香", capacity: 70, weeks: "1,4-10周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: true },
-	{ id: 22, code: "MEM6309", name: "区块链与金融科技创新概论", className: "MEM6309-03000-S01-PT", credit: 2, firstDate: "2025-09-21", teacher: "范磊", capacity: 60, weeks: "1,4-10周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼125", gpa: true },
-	{ id: 23, code: "MEM6310", name: "运营管理", className: "MEM6310-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "邵晓峰", capacity: 100, weeks: "1-2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼400", gpa: true },
-	{ id: 24, code: "MEM6311", name: "工程管理法律概论", className: "MEM6311-03000-S01-PT", credit: 2, firstDate: "2025-11-29", teacher: "王猛", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼400", gpa: true },
-	{ id: 25, code: "MEM8301", name: "大数据与互联网思维", className: "MEM8301-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "吴晨涛", capacity: 100, weeks: "2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: false },
-	{ id: 25, code: "MEM8301", name: "大数据与互联网思维", className: "MEM8301-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "吴晨涛", capacity: 100, weeks: "2周", weekday: 6, startTime: "18:00", endTime: "21:10", room: "教一楼300", gpa: false },
-	{ id: 26, code: "MEM8302", name: "物联网技术与发展趋势", className: "MEM8302-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "陈奕超", capacity: 60, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼100", gpa: false },
-	{ id: 27, code: "MEM8302", name: "物联网技术与发展趋势", className: "MEM8302-03000-S02-PT", credit: 2, firstDate: "2025-11-29", teacher: "俞嘉地", capacity: 60, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼100", gpa: false },
-	{ id: 28, code: "MEM8303", name: "人工智能", className: "MEM8303-03000-S01-PT", credit: 2, firstDate: "2025-11-29", teacher: "张晓凡", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼300", gpa: false },
-	{ id: 29, code: "MEM8304", name: "网络信息安全理论与技术", className: "MEM8304-03000-S01-PT", credit: 2, firstDate: "2025-11-29", teacher: "李生红", capacity: 80, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼400", gpa: false },
-	{ id: 30, code: "MEM8306", name: "新能源技术及应用", className: "MEM8306-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "殳国华", capacity: 60, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: false },
-	{ id: 31, code: "MEM8306", name: "新能源技术及应用", className: "MEM8306-03000-S02-PT", credit: 2, firstDate: "2025-11-29", teacher: "李然,吴超", capacity: 60, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: false },
-	{ id: 32, code: "MEM8307", name: "大规模集成电路概述", className: "MEM8307-03000-S01-PT", credit: 2, firstDate: "2025-11-30", teacher: "毛志刚", capacity: 60, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼125", gpa: false },
+    { id: 1, code: "MEM6002", name: "工程管理导论", className: "MEM6002-03000-S01-PT", credit: 2, firstDate: "2026-03-08", teacher: "黄丹", capacity: 100, weeks: "1-8周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆107", gpa: true },
+    { id: 2, code: "MEM6301", name: "人力资源与沟通管理", className: "MEM6301-03000-S01-PT", credit: 2, firstDate: "2026-05-16", teacher: "陶祁", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "工程馆102", gpa: true },
+    { id: 3, code: "MEM6303", name: "工程管理实践案例分析", className: "MEM6303-03000-S01-PT", credit: 2, firstDate: "2026-03-08", teacher: "李柠", capacity: 100, weeks: "1-8周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "工程馆218", gpa: true },
+    { id: 4, code: "MEM6305", name: "风险管理与高效决策", className: "MEM6305-03000-S01-PT", credit: 2, firstDate: "2026-05-10", teacher: "王春香", capacity: 100, weeks: "10-17周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆218", gpa: true },
+    { id: 5, code: "MEM6306", name: "系统创新与工程实践", className: "MEM6306-03000-S01-PT", credit: 2, firstDate: "2026-03-08", teacher: "郭朝晖", capacity: 100, weeks: "1-4周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆214", gpa: true },
+    { id: 6, code: "MEM6306", name: "系统创新与工程实践", className: "MEM6306-03000-S01-PT", credit: 2, firstDate: "2026-03-08", teacher: "郭朝晖", capacity: 100, weeks: "1-4周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "工程馆214", gpa: true },
+    { id: 7, code: "MEM6307", name: "社会创新与创业发展", className: "MEM6307-03000-S01-PT", credit: 2, firstDate: "2026-05-10", teacher: "卢永彬", capacity: 100, weeks: "10-17周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "工程馆102", gpa: true },
+    { id: 8, code: "MEM6310", name: "运营管理", className: "MEM6310-03000-S01-PT", credit: 2, firstDate: "2026-03-08", teacher: "徐丽群", capacity: 100, weeks: "1-8周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆204", gpa: true },
+    { id: 9, code: "MEM8303", name: "人工智能", className: "MEM8303-03000-S01-PT", credit: 2, firstDate: "2026-05-10", teacher: "张晓凡", capacity: 100, weeks: "10-17周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "工程馆218", gpa: false },
+    { id: 10, code: "MEM8305", name: "移动互联网前沿技术", className: "MEM8305-03000-S01-PT", credit: 2, firstDate: "2026-03-08", teacher: "孔令和", capacity: 100, weeks: "1-8周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "工程馆107", gpa: false },
+    { id: 11, code: "MEM8305", name: "移动互联网前沿技术", className: "MEM8305-03000-S02-PT", credit: 2, firstDate: "2026-05-16", teacher: "沈耀", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "工程馆107", gpa: false },
+    { id: 12, code: "MEM8308", name: "新型电力系统技术概论", className: "MEM8308-03000-S01-PT", credit: 2, firstDate: "2026-05-10", teacher: "王志新", capacity: 100, weeks: "10-17周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆110", gpa: false },
+    { id: 13, code: "MEM8309", name: "智能机器人", className: "MEM8309-03000-S01-PT", credit: 2, firstDate: "2026-05-10", teacher: "王景川", capacity: 100, weeks: "10-17周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆222", gpa: false },
+    { id: 14, code: "必选A", name: "学术英语", className: "请看课表", credit: "", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "08:00", endTime: "11:30", room: "工程馆", gpa: "true" },
+    { id: 15, code: "必选B", name: "新中特", className: "请看课表", credit: "", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: "true" },
+    { id: 16, code: "必选C", name: "自然辩证法概论", className: "请看课表", credit: "", firstDate: "2026-05-16", teacher: "", capacity: 0, weeks: "11-14周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: "true" },
 ];
 
 /* 状态 */
 let state = {
-	selectedIds: new Set(),
+	selectedIds: new Set([14, 15, 16]),
 	currentWeekStart: startOfWeek(dayjs(TERM_ANCHOR_STR).toDate()),
 	currentWeekNo: 1,
 	filteredCourses: COURSES,
@@ -503,11 +486,24 @@ function renderCourseList() {
                                 first.gpa === false ? '<span class="badge badge-gray">非GPA</span>' : '';
                 const creditBadge = `<span class="badge badge-gray">${credit}学分</span>`;
                 
+                const hasMultiple = courses.length > 1;
                 const isExpanded = state.expandedGroups.has(code);
-                const expandIcon = isExpanded ? '<i class="ri-arrow-down-s-line"></i>' : '<i class="ri-arrow-right-s-line"></i>';
+                const expandIcon = hasMultiple 
+                    ? (isExpanded ? '<i class="ri-arrow-down-s-line"></i>' : '<i class="ri-arrow-right-s-line"></i>')
+                    : '<span style="display:inline-block;width:16px;"></span>'; // 占位对齐
+
+                // 如果只有一门课，强制显示详细信息（覆盖上面的汇总逻辑）
+                if (!hasMultiple) {
+                    const s = courses[0];
+                    displayData.weekday = weekdayLabel(s.weekday);
+                    displayData.time = formatTimeRange(s.startTime, s.endTime);
+                    displayData.teacher = escapeHtml(s.teacher || '');
+                    displayData.room = escapeHtml(s.room || '');
+                    displayData.weeks = escapeHtml(s.weeks || '');
+                }
 
                 html += `
-                    <tr class="group-row ${isSelected ? 'row-selected' : ''}" data-code="${code}" style="cursor:pointer;">
+                    <tr class="group-row ${isSelected ? 'row-selected' : ''}" data-code="${code}" style="cursor:${hasMultiple ? 'pointer' : 'default'};">
                         <td class="w-checkbox">
                             <input type="checkbox" class="group-checkbox" data-code="${code}" ${checked}>
                         </td>
@@ -528,7 +524,7 @@ function renderCourseList() {
                     </tr>
                 `;
 
-                if (isExpanded) {
+                if (isExpanded && hasMultiple) {
                     html += renderCourseRows(courses, selectedCodes, true);
                 }
             }
@@ -1524,6 +1520,11 @@ function bindEvents() {
         // 如果点击的是复选框或其容器，不触发展开
         if (groupRow && !e.target.closest('.w-checkbox') && !e.target.matches('input')) {
             const code = groupRow.dataset.code;
+            
+            // 检查该组是否有多个课程
+            const groupCourses = state.filteredCourses.filter(c => c.code === code);
+            if (groupCourses.length <= 1) return; // 只有一门课，不展开
+
             if (state.expandedGroups.has(code)) {
                 state.expandedGroups.delete(code);
             } else {
