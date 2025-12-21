@@ -1569,6 +1569,16 @@ function bindEvents() {
 			const id = Number(t.dataset.id);
 			
 			if (t.checked) {
+                // 互斥逻辑：选中某门课时，自动取消同代码的其他课程
+                const currentCourse = COURSES.find(c => c.id === id);
+                if (currentCourse) {
+                    const sameCodeIds = Array.from(state.selectedIds).filter(sid => {
+                        const c = COURSES.find(x => x.id === sid);
+                        return c && c.code === currentCourse.code && c.id !== id;
+                    });
+                    sameCodeIds.forEach(sid => state.selectedIds.delete(sid));
+                }
+
 				// 检查是否可以选择（防重复代码）
 				if (canSelectCourse(id)) {
 					state.selectedIds.add(id);
