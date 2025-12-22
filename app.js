@@ -63,9 +63,9 @@ const COURSES = [
     { id: 11, code: "MEM8305", name: "移动互联网前沿技术", className: "MEM8305-03000-S02-PT", credit: 2, firstDate: "2026-05-16", teacher: "沈耀", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "工程馆107", gpa: false },
     { id: 12, code: "MEM8308", name: "新型电力系统技术概论", className: "MEM8308-03000-S01-PT", credit: 2, firstDate: "2026-05-10", teacher: "王志新", capacity: 100, weeks: "10-17周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆110", gpa: false },
     { id: 13, code: "MEM8309", name: "智能机器人", className: "MEM8309-03000-S01-PT", credit: 2, firstDate: "2026-05-10", teacher: "王景川", capacity: 100, weeks: "10-17周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆222", gpa: false },
-    { id: 14, code: "必选A", name: "学术英语", className: "请看课表", credit: "", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "08:00", endTime: "11:30", room: "工程馆", gpa: "true" },
-    { id: 15, code: "必选B", name: "新中特", className: "请看课表", credit: "", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: "true" },
-    { id: 16, code: "必选C", name: "自然辩证法概论", className: "请看课表", credit: "", firstDate: "2026-05-16", teacher: "", capacity: 0, weeks: "11-14周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: "true" },
+    { id: 14, code: "必选A", name: "学术英语", className: "请看课表", credit: "2", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "08:00", endTime: "11:30", room: "工程馆", gpa: "true" },
+    { id: 15, code: "必选B", name: "新中特", className: "请看课表", credit: "2", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: "true" },
+    { id: 16, code: "必选C", name: "自然辩证法概论", className: "请看课表", credit: "1", firstDate: "2026-05-16", teacher: "", capacity: 0, weeks: "11-14周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: "true" },
 ];
 
 /* 状态 */
