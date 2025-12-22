@@ -442,7 +442,19 @@ function renderCourseList() {
                 
                 // 组头行
                 const requiredGroup = isRequiredCourse(code);
-                const credit = CODE_TO_CREDIT[code] ?? first.credit ?? '';
+                
+                // 计算该课程组的显示学分（基于第一个班级的总学分）
+                // 逻辑：同 className 的课程会同时选中，学分累加；不同 className 互斥，学分通常一致
+                const classGroups = new Map();
+                courses.forEach(c => {
+                    if (!classGroups.has(c.className)) classGroups.set(c.className, []);
+                    classGroups.get(c.className).push(c);
+                });
+                const representativeClass = classGroups.values().next().value || [];
+                const totalCredit = representativeClass.reduce((sum, c) => {
+                    const itemCredit = CODE_TO_CREDIT[c.code] ?? c.credit ?? 0;
+                    return sum + Number(itemCredit);
+                }, 0);
                 
                 // 准备显示的数据
                 let displayData = {
@@ -489,7 +501,7 @@ function renderCourseList() {
                 const requiredBadge = requiredGroup ? `<span class="badge badge-warning">${requiredGroup.description}</span>` : '';
                 const gpaBadge = first.gpa === true ? '<span class="badge badge-success">GPA</span>' : 
                                 first.gpa === false ? '<span class="badge badge-gray">非GPA</span>' : '';
-                const creditBadge = `<span class="badge badge-gray">${credit}学分</span>`;
+                const creditBadge = `<span class="badge badge-gray">${totalCredit}学分</span>`;
                 
                 const hasMultiple = courses.length > 1;
                 const isExpanded = state.expandedGroups.has(code);
@@ -678,40 +690,57 @@ function canSelectCourse(courseId) {
 }
 
 function wouldConflictWithSelected(courseId) {
-	const course = COURSES.find(c => c.id === courseId);
-	if (!course) return false;
-	
-	// 如果课程已经被选择，不算冲突
-	if (state.selectedIds.has(courseId)) return false;
-	
-	// 只检查周末课程
-	if (course.weekday !== 6 && course.weekday !== 7) return false;
-	
-	const selectedCourses = COURSES.filter(c => 
-		state.selectedIds.has(c.id) && 
-		(c.weekday === 6 || c.weekday === 7)
-	);
-	
-	const courseWeeks = parseWeeks(course.weeks);
-	const courseSlot = getTimeSlot(course.startTime);
-	
-	// 检查是否与任何已选课程在时间上冲突
-	for (const selected of selectedCourses) {
-		if (selected.weekday === course.weekday) {
-			const selectedWeeks = parseWeeks(selected.weeks);
-			const selectedSlot = getTimeSlot(selected.startTime);
-			
-			// 检查是否有重叠的周次且时间段相同
-			const hasOverlapWeeks = [...courseWeeks].some(week => selectedWeeks.has(week));
-			
-			if (hasOverlapWeeks && selectedSlot === courseSlot) {
-				// 进一步检查实际时间是否重叠
-				if (timeRangesOverlap(course.startTime, course.endTime, selected.startTime, selected.endTime)) {
-					return true;
-				}
-			}
-		}
-	}
+	const mainCourse = COURSES.find(c => c.id === courseId);
+	if (!mainCourse) return false;
+
+    // 定义内部检查函数
+    const checkSingle = (course) => {
+        // 如果课程已经被选择，不算冲突
+        if (state.selectedIds.has(course.id)) return false;
+        
+        // 只检查周末课程
+        if (course.weekday !== 6 && course.weekday !== 7) return false;
+        
+        const selectedCourses = COURSES.filter(c => 
+            state.selectedIds.has(c.id) && 
+            (c.weekday === 6 || c.weekday === 7)
+        );
+        
+        const courseWeeks = parseWeeks(course.weeks);
+        const courseSlot = getTimeSlot(course.startTime);
+        
+        // 检查是否与任何已选课程在时间上冲突
+        for (const selected of selectedCourses) {
+            if (selected.weekday === course.weekday) {
+                const selectedWeeks = parseWeeks(selected.weeks);
+                const selectedSlot = getTimeSlot(selected.startTime);
+                
+                // 检查是否有重叠的周次且时间段相同
+                const hasOverlapWeeks = [...courseWeeks].some(week => selectedWeeks.has(week));
+                
+                if (hasOverlapWeeks && selectedSlot === courseSlot) {
+                    // 进一步检查实际时间是否重叠
+                    if (timeRangesOverlap(course.startTime, course.endTime, selected.startTime, selected.endTime)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    };
+
+    // 检查当前课程
+    if (checkSingle(mainCourse)) return true;
+
+    // 关联检查：检查同 code 同 className 的其他部分（例如 MEM6306 的另一半）
+    const linkedCourses = COURSES.filter(c => 
+        c.code === mainCourse.code && 
+        c.className === mainCourse.className && 
+        c.id !== courseId
+    );
+    for (const linked of linkedCourses) {
+        if (checkSingle(linked)) return true;
+    }
 	
 	return false;
 }
@@ -1354,16 +1383,27 @@ function generateRecommendations() {
 	}
 
 	// 1. Group available sections by code
-	const sectionsByCode = new Map();
+	const optionsByCode = new Map();
 	for (const code of selectedCodes) {
 		const sections = COURSES.filter(c => c.code === code);
 		if (sections.length > 0) {
-			sectionsByCode.set(code, sections);
+            // 按 className 分组，同一 className 的所有课程ID作为一个选项
+            const classGroups = new Map();
+            for (const s of sections) {
+                if (!classGroups.has(s.className)) {
+                    classGroups.set(s.className, []);
+                }
+                classGroups.get(s.className).push(s.id);
+            }
+            
+            // 将分组后的 ID 数组作为选项列表
+            const options = Array.from(classGroups.values());
+            optionsByCode.set(code, options);
 		}
 	}
 
 	// 2. Generate Cartesian product
-	const codes = Array.from(sectionsByCode.keys());
+	const codes = Array.from(optionsByCode.keys());
 	const combinations = [];
 	
 	function backtrack(index, currentSelection) {
@@ -1373,11 +1413,11 @@ function generateRecommendations() {
 		}
 		
 		const code = codes[index];
-		const sections = sectionsByCode.get(code);
-		for (const section of sections) {
-			currentSelection.push(section.id);
+		const options = optionsByCode.get(code);
+		for (const optionIds of options) {
+            optionIds.forEach(id => currentSelection.push(id));
 			backtrack(index + 1, currentSelection);
-			currentSelection.pop();
+            optionIds.forEach(() => currentSelection.pop());
 		}
 	}
 	
@@ -1588,13 +1628,18 @@ function bindEvents() {
             if (groupCourses.length === 0) return;
 
             if (t.checked) {
-                // 选中：默认选第一个
-                // 清理同代码的其他选择（单选逻辑）
+                // 选中：默认选第一个班级（及其所有分段）
+                // 清理同代码的其他选择
                 const allCoursesWithCode = COURSES.filter(c => c.code === code);
                 allCoursesWithCode.forEach(c => state.selectedIds.delete(c.id));
                 
-                // 选中该组第一个
-                state.selectedIds.add(groupCourses[0].id);
+                if (groupCourses.length > 0) {
+                    // 找到第一个课程的 className
+                    const targetClassName = groupCourses[0].className;
+                    // 选中所有同 code 且同 className 的课程
+                    const targetCourses = allCoursesWithCode.filter(c => c.className === targetClassName);
+                    targetCourses.forEach(c => state.selectedIds.add(c.id));
+                }
             } else {
                 // 取消选中：清除该组所有已选
                 const allCoursesWithCode = COURSES.filter(c => c.code === code);
@@ -1613,30 +1658,44 @@ function bindEvents() {
 			const id = Number(t.dataset.id);
 			
 			if (t.checked) {
-                // 互斥逻辑：选中某门课时，自动取消同代码的其他课程
                 const currentCourse = COURSES.find(c => c.id === id);
+                
                 if (currentCourse) {
-                    const sameCodeIds = Array.from(state.selectedIds).filter(sid => {
-                        const c = COURSES.find(x => x.id === sid);
-                        return c && c.code === currentCourse.code && c.id !== id;
-                    });
-                    sameCodeIds.forEach(sid => state.selectedIds.delete(sid));
-                }
+                    // 1. 联动选中：选中同代码且同班级名（className）的其他课程分段
+                    // （例如 MEM6306 上午和下午是同一个班级，需要同时选中）
+                    const linkedCourses = COURSES.filter(c => 
+                        c.code === currentCourse.code && 
+                        c.className === currentCourse.className
+                    );
+                    linkedCourses.forEach(c => state.selectedIds.add(c.id));
 
-				// 检查是否可以选择（防重复代码）
-				if (canSelectCourse(id)) {
-					state.selectedIds.add(id);
-				} else {
-					// 不允许选择，恢复checkbox状态并提示
-					t.checked = false;
-					const course = COURSES.find(c => c.id === id);
-					if (course) {
-						alert(`不能选择课程 "${course.name}"，因为已选择了相同代码 "${course.code}" 的其他课程。`);
-					}
-					return;
-				}
+                    // 2. 互斥逻辑：取消同代码但不同班级名（className）的课程
+                    // （例如 MEM8305 有两个不同班级，选了S01就不能选S02）
+                    const conflictCourses = Array.from(state.selectedIds).filter(sid => {
+                        const c = COURSES.find(x => x.id === sid);
+                        return c && c.code === currentCourse.code && c.className !== currentCourse.className;
+                    });
+                    conflictCourses.forEach(sid => state.selectedIds.delete(sid));
+
+                    // 3. 检查是否可以选择（防重复代码 - 虽然上面已经处理了互斥，这里作为双重保障或处理特殊情况）
+                    // 实际上上面的互斥逻辑已经保证了单选（对于不同班级），这里主要保留原有结构
+                    if (!canSelectCourse(id)) {
+                         // 如果 canSelectCourse 有其他逻辑（目前是返回true），可以在这里处理
+                    }
+                }
 			} else {
 				state.selectedIds.delete(id);
+                
+                // 联动取消：取消同代码且同班级名（className）的其他课程分段
+                const currentCourse = COURSES.find(c => c.id === id);
+                if (currentCourse) {
+                    const linkedCourses = COURSES.filter(c => 
+                        c.code === currentCourse.code && 
+                        c.className === currentCourse.className && 
+                        c.id !== id
+                    );
+                    linkedCourses.forEach(c => state.selectedIds.delete(c.id));
+                }
 			}
 			
 			// 清除推荐方案缓存
