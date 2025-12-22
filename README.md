@@ -1,5 +1,6 @@
 # MEM 选课助手
-![Uploading image.png…]()
+![143601766394163_ pic](https://github.com/user-attachments/assets/3da14991-b6ae-492d-a2b1-b2f1e38ff757)
+
 
 这是一个专为 MEM（工程管理硕士）项目设计的选课辅助工具，帮助学生高效规划课程、避免时间冲突，并可视化生成学期课表。
 
