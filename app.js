@@ -1032,18 +1032,22 @@ function importSelections(file) {
 			);
 			
 			// 验证课程代码不重复
-			const usedCodes = new Set();
+			const usedCodeMap = new Map(); // code -> className
 			const validIds = [];
 			let duplicateCount = 0;
 			
 			for (const id of existingIds) {
 				const course = COURSES.find(c => c.id === id);
 				if (course && course.code) {
-					if (usedCodes.has(course.code)) {
-						duplicateCount++;
-						continue; // 跳过重复代码的课程
-					}
-					usedCodes.add(course.code);
+					if (usedCodeMap.has(course.code)) {
+                        const existingClassName = usedCodeMap.get(course.code);
+                        if (existingClassName !== course.className) {
+                            duplicateCount++;
+                            continue; // 跳过重复代码且不同班级的课程
+                        }
+					} else {
+					    usedCodeMap.set(course.code, course.className);
+                    }
 				}
 				validIds.push(id);
 			}
@@ -1052,6 +1056,21 @@ function importSelections(file) {
 			
 			// 更新选择状态
 			state.selectedIds = new Set(validIds);
+            
+            // 自动补全关联课程
+            const idsToCheck = Array.from(state.selectedIds);
+            for (const id of idsToCheck) {
+                const course = COURSES.find(c => c.id === id);
+                if (course) {
+                    const linkedCourses = COURSES.filter(c => 
+                        c.code === course.code && 
+                        c.className === course.className && 
+                        !state.selectedIds.has(c.id)
+                    );
+                    linkedCourses.forEach(c => state.selectedIds.add(c.id));
+                }
+            }
+
 			state.existingCourseInfo = importedExistingInfo;
 			state.recommendPlans = [];
 			saveToLocalStorage();
@@ -1334,19 +1353,42 @@ function loadFromLocalStorage() {
 		);
 		
 		// 验证课程代码不重复（应用重复检查逻辑）
-		const usedCodes = new Set();
+		const usedCodeMap = new Map(); // code -> className
 		const finalValidIds = [];
 		for (const id of validIds) {
 			const course = COURSES.find(c => c.id === id);
 			if (course && course.code) {
-				if (usedCodes.has(course.code)) continue;
-				usedCodes.add(course.code);
+				if (usedCodeMap.has(course.code)) {
+                    // 如果已存在该代码，检查 className 是否一致
+                    const existingClassName = usedCodeMap.get(course.code);
+                    if (existingClassName !== course.className) {
+                        continue; // className 不一致，跳过（互斥）
+                    }
+                    // className 一致，允许（同一班级的分段）
+                } else {
+				    usedCodeMap.set(course.code, course.className);
+                }
 			}
 			finalValidIds.push(id);
 		}
 		
 		// 恢复状态
 		state.selectedIds = new Set(finalValidIds);
+        
+        // 自动补全关联课程（防止旧数据不完整）
+        const idsToCheck = Array.from(state.selectedIds);
+        for (const id of idsToCheck) {
+            const course = COURSES.find(c => c.id === id);
+            if (course) {
+                const linkedCourses = COURSES.filter(c => 
+                    c.code === course.code && 
+                    c.className === course.className && 
+                    !state.selectedIds.has(c.id)
+                );
+                linkedCourses.forEach(c => state.selectedIds.add(c.id));
+            }
+        }
+
 		if (data.currentWeekNo && data.currentWeekNo >= 1 && data.currentWeekNo <= MAX_WEEKS) {
 			state.currentWeekNo = data.currentWeekNo;
 			state.currentWeekStart = getWeekStartByNo(state.currentWeekNo);
