@@ -25,6 +25,7 @@
                 <h1>MEM 选课助手</h1>
             </div>
             <div class="header-actions">
+                <button id="addExistingInfoBtn" class="btn btn-outline btn-sm" title="添加已修课程/学分信息"><i class="ri-add-circle-line"></i> 添加已有课程信息</button>
                 <button id="exportBtn" class="btn btn-outline btn-sm" title="导出选课记录"><i class="ri-download-cloud-2-line"></i> 导出记录</button>
                 <button id="importBtn" class="btn btn-outline btn-sm" title="导入选课记录"><i class="ri-upload-cloud-2-line"></i> 导入记录</button>
                 <input id="importFileInput" type="file" accept=".json" style="display: none;" />
@@ -146,6 +147,36 @@
                 <p>无需考虑课程冲突和教室安排</p>
                 <p>一键智能排课，自动避开冲突，优先同教室方案</p>
                 <button id="modalRecommendBtn" class="btn btn-recommend">立即体验</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加已有课程信息弹窗 -->
+    <div id="existingInfoModal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="closeExistingInfoModalBtn" class="modal-close" title="关闭"><i class="ri-close-line"></i></button>
+            <div class="modal-body">
+                <div class="modal-icon primary"><i class="ri-add-circle-line"></i></div>
+                <h3>添加已有课程信息</h3>
+                <p>用于叠加统计：不影响课表冲突检测与日历导出。</p>
+                <form id="existingInfoForm" class="existing-info-form">
+                    <div class="form-row">
+                        <label for="existingCoreCountInput">已修核心必修课程（门数）</label>
+                        <input id="existingCoreCountInput" type="number" min="0" step="1" inputmode="numeric" />
+                    </div>
+                    <div class="form-row">
+                        <label for="existingGpaCreditsInput">已修 GPA 学分</label>
+                        <input id="existingGpaCreditsInput" type="number" min="0" step="0.5" inputmode="decimal" />
+                    </div>
+                    <div class="form-row">
+                        <label for="existingNonGpaCreditsInput">已修 非GPA 学分</label>
+                        <input id="existingNonGpaCreditsInput" type="number" min="0" step="0.5" inputmode="decimal" />
+                    </div>
+                    <div class="modal-actions">
+                        <button id="resetExistingInfoBtn" class="btn btn-outline" type="button">清空</button>
+                        <button id="saveExistingInfoBtn" class="btn btn-primary" type="submit">保存</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

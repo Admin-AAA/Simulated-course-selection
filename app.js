@@ -63,9 +63,9 @@ const COURSES = [
     { id: 11, code: "MEM8305", name: "移动互联网前沿技术", className: "MEM8305-03000-S02-PT", credit: 2, firstDate: "2026-05-16", teacher: "沈耀", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "工程馆107", gpa: false },
     { id: 12, code: "MEM8308", name: "新型电力系统技术概论", className: "MEM8308-03000-S01-PT", credit: 2, firstDate: "2026-05-10", teacher: "王志新", capacity: 100, weeks: "10-17周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆110", gpa: false },
     { id: 13, code: "MEM8309", name: "智能机器人", className: "MEM8309-03000-S01-PT", credit: 2, firstDate: "2026-05-10", teacher: "王景川", capacity: 100, weeks: "10-17周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆222", gpa: false },
-    { id: 14, code: "必选A", name: "学术英语", className: "请看课表", credit: "2", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "08:00", endTime: "11:30", room: "工程馆", gpa: "true" },
-    { id: 15, code: "必选B", name: "新中特", className: "请看课表", credit: "2", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: "true" },
-    { id: 16, code: "必选C", name: "自然辩证法概论", className: "请看课表", credit: "1", firstDate: "2026-05-16", teacher: "", capacity: 0, weeks: "11-14周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: "true" },
+    { id: 14, code: "必选A", name: "学术英语", className: "请看课表", credit: "2", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "08:00", endTime: "11:30", room: "工程馆", gpa: true },
+    { id: 15, code: "必选B", name: "新中特", className: "请看课表", credit: "2", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: true },
+    { id: 16, code: "必选C", name: "自然辩证法概论", className: "请看课表", credit: "1", firstDate: "2026-05-16", teacher: "", capacity: 0, weeks: "11-14周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: true },
 ];
 
 /* 状态 */
@@ -80,7 +80,12 @@ let state = {
     isCompressed: true,
     compressedGroups: [],
     isListCompressed: true,
-    expandedGroups: new Set()
+    expandedGroups: new Set(),
+	existingCourseInfo: {
+		coreRequiredCount: 0,
+		gpaCredits: 0,
+		nonGpaCredits: 0
+	}
 };
 
 /* 时间/日期工具 */
@@ -607,6 +612,17 @@ function applyFilter() {
 	});
 }
 
+function normalizeExistingCourseInfo(info) {
+	const coreRequiredCount = Math.max(0, parseInt(info?.coreRequiredCount, 10) || 0);
+	const gpaCredits = Math.max(0, Number(info?.gpaCredits) || 0);
+	const nonGpaCredits = Math.max(0, Number(info?.nonGpaCredits) || 0);
+	return { coreRequiredCount, gpaCredits, nonGpaCredits };
+}
+
+function getExistingCourseInfo() {
+	return normalizeExistingCourseInfo(state.existingCourseInfo || {});
+}
+
 function updateSelectedCredit() {
 	let total = 0;
 	for (const id of state.selectedIds) {
@@ -615,18 +631,21 @@ function updateSelectedCredit() {
 		const credit = CODE_TO_CREDIT[c.code] ?? c.credit ?? 0;
 		total += Number(credit) || 0;
 	}
-	if (creditTotalEl) creditTotalEl.textContent = String(total);
+	const existingInfo = getExistingCourseInfo();
+	const totalWithExisting = total + existingInfo.gpaCredits + existingInfo.nonGpaCredits;
+	if (creditTotalEl) creditTotalEl.textContent = String(totalWithExisting);
 	
 	// 更新必修课程进度
 	const progress = getRequiredCourseProgress('core');
 	if (requiredProgressEl) {
 		// const color = progress.selected >= progress.required ? '#10b981' : (progress.selected > 0 ? '#f59e0b' : '#6b7280');
-		requiredProgressEl.textContent = `${progress.selected}/${progress.required}`;
+		const selectedWithExisting = progress.selected + existingInfo.coreRequiredCount;
+		requiredProgressEl.textContent = `${selectedWithExisting}/${progress.required}`;
 		// requiredProgressEl.style.color = color;
 	}
 	
 	// 更新GPA学分显示
-	const gpaCredits = calculateGPACredits();
+	const gpaCredits = calculateGPACredits() + existingInfo.gpaCredits;
 	if (gpaDisplayEl) {
 		gpaDisplayEl.textContent = String(gpaCredits);
         // Remove inline color style, use class if needed, but here we just update text
@@ -871,13 +890,19 @@ function exportSelections() {
 	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id));
 	const totalCredit = selectedCourses.reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
 	const gpaCredit = selectedCourses.filter(c => c.gpa === true).reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
+	const existingInfo = getExistingCourseInfo();
+	const totalCreditWithExisting = totalCredit + existingInfo.gpaCredits + existingInfo.nonGpaCredits;
+	const gpaCreditWithExisting = gpaCredit + existingInfo.gpaCredits;
 	
 	const exportData = {
 		selectedIds: Array.from(state.selectedIds),
+		existingCourseInfo: existingInfo,
 		selectedCourses: selectedCourses,
 		exportTime: new Date().toISOString(),
-		totalCredit: totalCredit,
-		gpaCredit: gpaCredit
+		selectedTotalCredit: totalCredit,
+		selectedGpaCredit: gpaCredit,
+		totalCredit: totalCreditWithExisting,
+		gpaCredit: gpaCreditWithExisting
 	};
 	
 	const dataStr = JSON.stringify(exportData, null, 2);
@@ -890,7 +915,11 @@ function exportSelections() {
 	link.click();
 	document.body.removeChild(link);
 	
-	alert(`已导出 ${selectedCourses.length} 门课程，共 ${totalCredit} 学分，其中 ${gpaCredit} GPA学分`);
+	let message = `已导出 ${selectedCourses.length} 门课程，学分合计 ${totalCreditWithExisting}，其中 GPA 学分 ${gpaCreditWithExisting}`;
+	if (existingInfo.coreRequiredCount > 0 || existingInfo.gpaCredits > 0 || existingInfo.nonGpaCredits > 0) {
+		message += `（已修：核心必修 ${existingInfo.coreRequiredCount} 门，GPA ${existingInfo.gpaCredits}，非GPA ${existingInfo.nonGpaCredits}）`;
+	}
+	alert(message);
 }
 
 function exportICSCalendar() {
@@ -965,6 +994,8 @@ function importSelections(file) {
 				alert('文件格式错误：缺少选课数据');
 				return;
 			}
+
+			const importedExistingInfo = normalizeExistingCourseInfo(importData.existingCourseInfo || {});
 			
 			// 验证课程ID是否存在
 			const existingIds = importData.selectedIds.filter(id => 
@@ -992,6 +1023,7 @@ function importSelections(file) {
 			
 			// 更新选择状态
 			state.selectedIds = new Set(validIds);
+			state.existingCourseInfo = importedExistingInfo;
 			state.recommendPlans = [];
 			saveToLocalStorage();
 			
@@ -1004,6 +1036,8 @@ function importSelections(file) {
 			const importedCourses = COURSES.filter(c => validIds.includes(c.id));
 			const actualTotalCredit = importedCourses.reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
 			const actualGpaCredit = importedCourses.filter(c => c.gpa === true).reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
+			const actualTotalCreditWithExisting = actualTotalCredit + importedExistingInfo.gpaCredits + importedExistingInfo.nonGpaCredits;
+			const actualGpaCreditWithExisting = actualGpaCredit + importedExistingInfo.gpaCredits;
 			
 			let message = `已导入 ${validIds.length} 门课程`;
 			if (invalidCount > 0) {
@@ -1012,7 +1046,10 @@ function importSelections(file) {
 			if (duplicateCount > 0) {
 				message += `，${duplicateCount} 门重复代码课程已跳过`;
 			}
-			message += `，共 ${actualTotalCredit} 学分，其中 ${actualGpaCredit} GPA学分`;
+			message += `，学分合计 ${actualTotalCreditWithExisting}，其中 GPA 学分 ${actualGpaCreditWithExisting}`;
+			if (importedExistingInfo.coreRequiredCount > 0 || importedExistingInfo.gpaCredits > 0 || importedExistingInfo.nonGpaCredits > 0) {
+				message += `（已修：核心必修 ${importedExistingInfo.coreRequiredCount} 门，GPA ${importedExistingInfo.gpaCredits}，非GPA ${importedExistingInfo.nonGpaCredits}）`;
+			}
 			alert(message);
 			
 		} catch (error) {
@@ -1069,16 +1106,19 @@ function downloadScheduleImage() {
 		}
 		return total;
 	})();
-	const gpaCredits = calculateGPACredits();
+	const existingInfo = getExistingCourseInfo();
+	const gpaCredits = calculateGPACredits() + existingInfo.gpaCredits;
 	const conflictCount = calculateTotalConflicts();
 	const requiredProgress = getRequiredCourseProgress('core');
+	const totalCreditsWithExisting = totalCredits + existingInfo.gpaCredits + existingInfo.nonGpaCredits;
+	const requiredSelectedWithExisting = requiredProgress.selected + existingInfo.coreRequiredCount;
 	
 	ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 	ctx.fillStyle = '#6b7280';
 	const statsY = 60;
 	ctx.textAlign = 'left';
-	ctx.fillText(`已选学分: ${totalCredits}`, 50, statsY);
-	ctx.fillText(`核心必修: ${requiredProgress.selected}/${requiredProgress.required}`, 200, statsY);
+	ctx.fillText(`已选学分: ${totalCreditsWithExisting}`, 50, statsY);
+	ctx.fillText(`核心必修: ${requiredSelectedWithExisting}/${requiredProgress.required}`, 200, statsY);
 	ctx.fillText(`GPA学分: ${gpaCredits}`, 350, statsY);
 	ctx.fillText(`时间冲突: ${conflictCount}`, 500, statsY);
 	
@@ -1242,6 +1282,7 @@ function saveToLocalStorage() {
 			selectedIds: Array.from(state.selectedIds),
 			currentWeekNo: state.currentWeekNo,
 			searchKeyword: state.searchKeyword,
+			existingCourseInfo: getExistingCourseInfo(),
 			timestamp: Date.now()
 		};
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1284,6 +1325,9 @@ function loadFromLocalStorage() {
 		if (data.searchKeyword) {
 			state.searchKeyword = data.searchKeyword;
 			if (searchInputEl) searchInputEl.value = data.searchKeyword;
+		}
+		if (data.existingCourseInfo) {
+			state.existingCourseInfo = normalizeExistingCourseInfo(data.existingCourseInfo);
 		}
 		
 		return finalValidIds.length > 0;
@@ -1778,6 +1822,8 @@ function init() {
     
     // 初始化推荐弹窗
     initRecommendModal();
+	// 初始化已有课程信息弹窗
+	initExistingInfoModal();
 }
 
 function initRecommendModal() {
@@ -1847,6 +1893,79 @@ function initRecommendModal() {
             applyNextRecommendation();
         });
     }
+}
+
+function initExistingInfoModal() {
+	const addExistingInfoBtn = document.getElementById('addExistingInfoBtn');
+	const existingInfoModalEl = document.getElementById('existingInfoModal');
+	const closeExistingInfoModalBtn = document.getElementById('closeExistingInfoModalBtn');
+	const existingInfoFormEl = document.getElementById('existingInfoForm');
+	const existingCoreCountInputEl = document.getElementById('existingCoreCountInput');
+	const existingGpaCreditsInputEl = document.getElementById('existingGpaCreditsInput');
+	const existingNonGpaCreditsInputEl = document.getElementById('existingNonGpaCreditsInput');
+	const resetExistingInfoBtn = document.getElementById('resetExistingInfoBtn');
+
+	if (!addExistingInfoBtn || !existingInfoModalEl || !existingInfoFormEl) return;
+
+	function syncFormFromState() {
+		const info = getExistingCourseInfo();
+		if (existingCoreCountInputEl) existingCoreCountInputEl.value = String(info.coreRequiredCount);
+		if (existingGpaCreditsInputEl) existingGpaCreditsInputEl.value = String(info.gpaCredits);
+		if (existingNonGpaCreditsInputEl) existingNonGpaCreditsInputEl.value = String(info.nonGpaCredits);
+	}
+
+	function openModal() {
+		syncFormFromState();
+		existingInfoModalEl.classList.add('active');
+		requestAnimationFrame(() => {
+			if (existingCoreCountInputEl) existingCoreCountInputEl.focus();
+		});
+	}
+
+	function closeModal() {
+		existingInfoModalEl.classList.remove('active');
+	}
+
+	addExistingInfoBtn.addEventListener('click', openModal);
+	if (closeExistingInfoModalBtn) closeExistingInfoModalBtn.addEventListener('click', closeModal);
+
+	// 点击遮罩层关闭
+	existingInfoModalEl.addEventListener('click', (e) => {
+		if (e.target === existingInfoModalEl) {
+			closeModal();
+		}
+	});
+
+	// Esc 关闭
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape' && existingInfoModalEl.classList.contains('active')) {
+			closeModal();
+		}
+	});
+
+	// 清空（仅清空表单，不保存）
+	if (resetExistingInfoBtn) {
+		resetExistingInfoBtn.addEventListener('click', () => {
+			if (existingCoreCountInputEl) existingCoreCountInputEl.value = '0';
+			if (existingGpaCreditsInputEl) existingGpaCreditsInputEl.value = '0';
+			if (existingNonGpaCreditsInputEl) existingNonGpaCreditsInputEl.value = '0';
+			if (existingCoreCountInputEl) existingCoreCountInputEl.focus();
+		});
+	}
+
+	// 保存
+	existingInfoFormEl.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const nextInfo = normalizeExistingCourseInfo({
+			coreRequiredCount: existingCoreCountInputEl ? existingCoreCountInputEl.value : 0,
+			gpaCredits: existingGpaCreditsInputEl ? existingGpaCreditsInputEl.value : 0,
+			nonGpaCredits: existingNonGpaCreditsInputEl ? existingNonGpaCreditsInputEl.value : 0
+		});
+		state.existingCourseInfo = nextInfo;
+		saveToLocalStorage();
+		updateSelectedCredit();
+		closeModal();
+	});
 }
 
 document.addEventListener('DOMContentLoaded', init);
