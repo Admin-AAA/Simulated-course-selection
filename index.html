@@ -22,12 +22,16 @@
         <div class="header-content">
             <div class="brand">
                 <i class="ri-calendar-check-fill brand-icon"></i>
-                <h1>MEM 选课助手</h1>
+                <h1>周末课程表</h1>
             </div>
             <div class="header-actions">
+                <select id="termSelect" class="form-select">
+                    <option value="25_autumn">25年秋季课程</option>
+                    <option value="26_spring" selected>26年春季课程</option>
+                </select>
                 <button id="addExistingInfoBtn" class="btn btn-outline btn-sm" title="添加已修课程/学分信息"><i class="ri-add-circle-line"></i> 添加已修学分</button>
-                <button id="exportBtn" class="btn btn-outline btn-sm" title="导出选课记录"><i class="ri-download-cloud-2-line"></i> 导出记录</button>
-                <button id="importBtn" class="btn btn-outline btn-sm" title="导入选课记录"><i class="ri-upload-cloud-2-line"></i> 导入记录</button>
+                <button id="exportBtn" class="btn btn-outline btn-sm" title="导出选课记录"><i class="ri-download-cloud-2-line"></i> 导出</button>
+                <button id="importBtn" class="btn btn-outline btn-sm" title="导入选课记录"><i class="ri-upload-cloud-2-line"></i> 导入</button>
                 <input id="importFileInput" type="file" accept=".json" style="display: none;" />
             </div>
         </div>
@@ -132,7 +136,7 @@
 	</main>
 
 	<footer class="page-footer">
-		<p>数据源：当前目录下的 25级25秋季课程安排信息.xlsx</p>
+		<p>Design By aowang</p>
 	</footer>
 
 	<script src="./app.js"></script>

@@ -1,5 +1,17 @@
 /* 全局常量与工具 */
-const TERM_ANCHOR_STR = '2026-03-02'; // 第一周锚点（周次从此日所在周计为第1周）
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+
+const TERM_ANCHORS = {
+    '25_autumn': '2025-09-08',
+    '26_spring': '2026-03-02'
+};
 const MAX_WEEKS = 18; // 最大周数
 
 // 学分映射（课程代码 -> 学分）
@@ -49,7 +61,43 @@ const REQUIRED_GROUPS = {
 
 // Excel 固化数据：示例结构。若你提供真实字段名，可替换。
 // 字段：id, name, weekday(1-7, 周一为1), startTime("HH:mm"), endTime("HH:mm"), teacher, room
-const COURSES = [
+const COURSES_DATA = {
+    '25_autumn': [
+	{ id: 1, code: "GE6001", name: "学术写作、规范与伦理", className: "GE6001-03000-S01-PT", credit: 1, firstDate: "2025-12-27", teacher: "李红兵", capacity: 100, weeks: "15-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: true },
+	{ id: 2, code: "GE6001", name: "学术写作、规范与伦理", className: "GE6001-03000-S02-PT", credit: 1, firstDate: "2025-12-28", teacher: "李红兵", capacity: 100, weeks: "15-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼200", gpa: true },
+	{ id: 3, code: "GE6001", name: "学术写作、规范与伦理", className: "GE6001-03000-S03-PT", credit: 1, firstDate: "2025-12-28", teacher: "李红兵", capacity: 100, weeks: "15-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: true },
+	{ id: 4, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S01-PT", credit: 3, firstDate: "2025-09-20", teacher: "周钢", capacity: 70, weeks: "1-2,5-14周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼100", gpa: true },
+	{ id: 5, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S02-PT", credit: 3, firstDate: "2025-09-21", teacher: "周钢", capacity: 70, weeks: "1,4-14周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼100", gpa: true },
+	{ id: 6, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S03-PT", credit: 3, firstDate: "2025-09-21", teacher: "周钢", capacity: 70, weeks: "1,4-14周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼100", gpa: true },
+	{ id: 7, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S04-PT", credit: 3, firstDate: "2025-09-21", teacher: "潘常春", capacity: 60, weeks: "1,4-14周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼125", gpa: true },
+	{ id: 8, code: "MEM6002", name: "工程管理导论", className: "MEM6002-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "全林", capacity: 100, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼400", gpa: true },
+	{ id: 9, code: "MEM6003", name: "工程经济学", className: "MEM6003-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "殷翔", capacity: 100, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼300", gpa: true },
+	{ id: 10, code: "MEM6003", name: "工程经济学", className: "MEM6003-03000-S02-PT", credit: 2, firstDate: "2025-09-20", teacher: "殷翔", capacity: 100, weeks: "1-2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼300", gpa: true },
+	{ id: 11, code: "MEM6003", name: "工程经济学", className: "MEM6003-03000-S03-PT", credit: 2, firstDate: "2025-11-30", teacher: "杨忠直", capacity: 100, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼400", gpa: true },
+	{ id: 12, code: "MEM6005", name: "质量与可靠性管理", className: "MEM6005-03000-S01-PT", credit: 2, firstDate: "2025-09-21", teacher: "苗瑞", capacity: 80, weeks: "1,4-10周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: true },
+	{ id: 13, code: "MEM6005", name: "质量与可靠性管理", className: "MEM6005-03000-S02-PT", credit: 2, firstDate: "2025-11-29", teacher: "苗瑞", capacity: 80, weeks: "11-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼410", gpa: true },
+	{ id: 14, code: "MEM6005", name: "质量与可靠性管理", className: "MEM6005-03000-S03-PT", credit: 2, firstDate: "2025-11-30", teacher: "苗瑞", capacity: 80, weeks: "11-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼410", gpa: true },
+	{ id: 15, code: "MEM6006", name: "工程信息管理", className: "MEM6006-03000-S01-PT", credit: 2, firstDate: "2025-09-21", teacher: "蔡鸿明", capacity: 100, weeks: "1,4-10周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼400", gpa: true },
+	{ id: 16, code: "MEM6006", name: "工程信息管理", className: "MEM6006-03000-S02-PT", credit: 2, firstDate: "2025-11-29", teacher: "刘雨桐", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼300", gpa: true },
+	{ id: 17, code: "MEM6301", name: "人力资源与沟通管理", className: "MEM6301-03000-S01-PT", credit: 2, firstDate: "2025-11-30", teacher: "陶祁", capacity: 70, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: true },
+	{ id: 18, code: "MEM6302", name: "领导力", className: "MEM6302-03000-S01-PT", credit: 2, firstDate: "2025-11-30", teacher: "张兴福", capacity: 100, weeks: "11-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼400", gpa: true },
+	{ id: 19, code: "MEM6304", name: "库存与供应链管理", className: "MEM6304-03000-S01-PT", credit: 2, firstDate: "2025-11-30", teacher: "张文杰", capacity: 50, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼308", gpa: true },
+	{ id: 20, code: "MEM6304", name: "库存与供应链管理", className: "MEM6304-03000-S02-PT", credit: 2, firstDate: "2025-11-30", teacher: "张文杰", capacity: 50, weeks: "11-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼308", gpa: true },
+	{ id: 21, code: "MEM6305", name: "风险管理与高效决策", className: "MEM6305-03000-S01-PT", credit: 2, firstDate: "2025-09-21", teacher: "王春香", capacity: 70, weeks: "1,4-10周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: true },
+	{ id: 22, code: "MEM6309", name: "区块链与金融科技创新概论", className: "MEM6309-03000-S01-PT", credit: 2, firstDate: "2025-09-21", teacher: "范磊", capacity: 60, weeks: "1,4-10周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼125", gpa: true },
+	{ id: 23, code: "MEM6310", name: "运营管理", className: "MEM6310-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "邵晓峰", capacity: 100, weeks: "1-2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼400", gpa: true },
+	{ id: 24, code: "MEM6311", name: "工程管理法律概论", className: "MEM6311-03000-S01-PT", credit: 2, firstDate: "2025-11-29", teacher: "王猛", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼400", gpa: true },
+	{ id: 25, code: "MEM8301", name: "大数据与互联网思维", className: "MEM8301-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "吴晨涛", capacity: 100, weeks: "2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: false },
+	{ id: 33, code: "MEM8301", name: "大数据与互联网思维", className: "MEM8301-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "吴晨涛", capacity: 100, weeks: "2周", weekday: 6, startTime: "18:00", endTime: "21:10", room: "教一楼300", gpa: false },
+	{ id: 26, code: "MEM8302", name: "物联网技术与发展趋势", className: "MEM8302-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "陈奕超", capacity: 60, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼100", gpa: false },
+	{ id: 27, code: "MEM8302", name: "物联网技术与发展趋势", className: "MEM8302-03000-S02-PT", credit: 2, firstDate: "2025-11-29", teacher: "俞嘉地", capacity: 60, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼100", gpa: false },
+	{ id: 28, code: "MEM8303", name: "人工智能", className: "MEM8303-03000-S01-PT", credit: 2, firstDate: "2025-11-29", teacher: "张晓凡", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼300", gpa: false },
+	{ id: 29, code: "MEM8304", name: "网络信息安全理论与技术", className: "MEM8304-03000-S01-PT", credit: 2, firstDate: "2025-11-29", teacher: "李生红", capacity: 80, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼400", gpa: false },
+	{ id: 30, code: "MEM8306", name: "新能源技术及应用", className: "MEM8306-03000-S01-PT", credit: 2, firstDate: "2025-09-20", teacher: "殳国华", capacity: 60, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: false },
+	{ id: 31, code: "MEM8306", name: "新能源技术及应用", className: "MEM8306-03000-S02-PT", credit: 2, firstDate: "2025-11-29", teacher: "李然,吴超", capacity: 60, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: false },
+	{ id: 32, code: "MEM8307", name: "大规模集成电路概述", className: "MEM8307-03000-S01-PT", credit: 2, firstDate: "2025-11-30", teacher: "毛志刚", capacity: 60, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼125", gpa: false },
+    ],
+    '26_spring': [
     { id: 1, code: "MEM6002", name: "工程管理导论", className: "MEM6002-03000-S01-PT", credit: 2, firstDate: "2026-03-08", teacher: "黄丹", capacity: 100, weeks: "1-8周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "工程馆107", gpa: true },
     { id: 2, code: "MEM6301", name: "人力资源与沟通管理", className: "MEM6301-03000-S01-PT", credit: 2, firstDate: "2026-05-16", teacher: "陶祁", capacity: 100, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "工程馆102", gpa: true },
     { id: 3, code: "MEM6303", name: "工程管理实践案例分析", className: "MEM6303-03000-S01-PT", credit: 2, firstDate: "2026-03-08", teacher: "李柠", capacity: 100, weeks: "1-8周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "工程馆218", gpa: true },
@@ -66,14 +114,17 @@ const COURSES = [
     { id: 14, code: "必选A", name: "学术英语", className: "请看课表", credit: "2", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "08:00", endTime: "11:30", room: "工程馆", gpa: true },
     { id: 15, code: "必选B", name: "新中特", className: "请看课表", credit: "2", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: true },
     { id: 16, code: "必选C", name: "自然辩证法概论", className: "请看课表", credit: "1", firstDate: "2026-05-16", teacher: "", capacity: 0, weeks: "11-14周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: true },
-];
+    ]
+};
 
 /* 状态 */
 let state = {
+    currentTerm: '26_spring',
 	selectedIds: new Set([14, 15, 16]),
-	currentWeekStart: startOfWeek(dayjs(TERM_ANCHOR_STR).toDate()),
+    termData: {}, // 缓存各学期的选择 { '25_autumn': [], '26_spring': [] }
+	currentWeekStart: null,
 	currentWeekNo: 1,
-	filteredCourses: COURSES,
+	filteredCourses: [],
 	searchKeyword: "",
 	recommendPlans: [], // Stores generated plans (array of Set<id>)
 	currentPlanIndex: -1,
@@ -88,7 +139,50 @@ let state = {
 	}
 };
 
+/**
+ * 统一状态管理
+ * @param {Object} newState - 要更新的状态片段
+ * @param {Object} options - 配置项
+ * @param {boolean} options.render - 是否触发渲染 (默认 true)
+ * @param {boolean} options.save - 是否保存到本地存储 (默认 true)
+ * @param {boolean} options.renderCalendar - 是否重新渲染日历网格 (默认 false)
+ */
+function setState(newState, options = {}) {
+    const { render = true, save = true, renderCalendar = false } = options;
+    
+    Object.assign(state, newState);
+    
+    if (save) saveToLocalStorage();
+    
+    if (render) {
+        if (newState.hasOwnProperty('searchKeyword') || newState.hasOwnProperty('filteredCourses')) {
+            // 仅搜索相关更新
+        } else {
+            updateSelectedCredit();
+        }
+        
+        renderCourseList();
+        
+        if (renderCalendar || newState.hasOwnProperty('isCompressed')) {
+            renderCalendarGrid();
+        }
+        renderEvents();
+        
+        if (newState.hasOwnProperty('currentWeekNo')) {
+            updateWeekTitle();
+        }
+    }
+}
+
 /* 时间/日期工具 */
+function getCourses() {
+    return COURSES_DATA[state.currentTerm] || [];
+}
+
+function getTermAnchor() {
+    return TERM_ANCHORS[state.currentTerm];
+}
+
 function startOfWeek(date) {
 	// 以周一为周起点
 	const d = dayjs(date);
@@ -108,7 +202,7 @@ function formatTimeRange(s, e) { return `${s} - ${e}`; }
 
 // 学周工具
 function getWeek1Start() {
-	return startOfWeek(dayjs(TERM_ANCHOR_STR).toDate());
+	return startOfWeek(dayjs(getTermAnchor()).toDate());
 }
 function getWeekStartByNo(weekNo) {
 	return dayjs(getWeek1Start()).add(weekNo - 1, 'week').toDate();
@@ -179,7 +273,7 @@ function calculateCompressedWeeks() {
         // Find all courses active in this week
         const activeCourses = [];
         for (const id of state.selectedIds) {
-            const c = COURSES.find(x => x.id === id);
+            const c = getCourses().find(x => x.id === id);
             if (c && isCourseInWeek(c, w) && (c.weekday === 6 || c.weekday === 7)) {
                 activeCourses.push(c.id);
             }
@@ -215,6 +309,7 @@ function calculateCompressedWeeks() {
 /* 渲染：周末专用日历栅格 */
 function renderCalendarGrid() {
 	calendarEl.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     
     state.compressedGroups = calculateCompressedWeeks();
     const groups = state.compressedGroups;
@@ -231,7 +326,7 @@ function renderCalendarGrid() {
     corner.style.top = '0';
     corner.style.left = '0';
 	corner.innerHTML = '<i class="ri-time-line"></i>';
-	calendarEl.appendChild(corner);
+	fragment.appendChild(corner);
 	
 	// 生成周次×周末列标题
 	groups.forEach((group, index) => {
@@ -251,14 +346,14 @@ function renderCalendarGrid() {
 		satHeader.innerHTML = `<div>${group.label}</div><div style="font-weight:400;margin-top:2px;">${dateLabelSat}</div>`;
 		satHeader.dataset.groupIndex = String(index);
 		satHeader.dataset.day = '6';
-		calendarEl.appendChild(satHeader);
+		fragment.appendChild(satHeader);
 		
 		const sunHeader = document.createElement('div');
 		sunHeader.className = 'day-header';
 		sunHeader.innerHTML = `<div>${group.label}</div><div style="font-weight:400;margin-top:2px;">${dateLabelSun}</div>`;
 		sunHeader.dataset.groupIndex = String(index);
 		sunHeader.dataset.day = '7';
-		calendarEl.appendChild(sunHeader);
+		fragment.appendChild(sunHeader);
 	});
 	
 	// 上午/下午/晚上行
@@ -272,7 +367,7 @@ function renderCalendarGrid() {
 		const timeCell = document.createElement('div');
 		timeCell.className = 'time-col';
 		timeCell.innerHTML = `<div style="text-align:center;"><div>${slot.label}</div><div style="font-size:10px;opacity:0.8;margin-top:4px;">${slot.time}</div></div>`;
-		calendarEl.appendChild(timeCell);
+		fragment.appendChild(timeCell);
 		
 		groups.forEach((group, index) => {
 			for (let day = 6; day <= 7; day++) {
@@ -281,10 +376,11 @@ function renderCalendarGrid() {
 				cell.dataset.groupIndex = String(index);
 				cell.dataset.day = String(day);
 				cell.dataset.slot = slot.key;
-				calendarEl.appendChild(cell);
+				fragment.appendChild(cell);
 			}
 		});
 	}
+    calendarEl.appendChild(fragment);
 }
 
 function groupOverlaps(courses) {
@@ -325,7 +421,7 @@ function renderEvents() {
 	const oldEvents = calendarEl.querySelectorAll('.event');
 	oldEvents.forEach(e => e.remove());
 
-	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id));
+	const selectedCourses = getCourses().filter(c => state.selectedIds.has(c.id));
 	// 按 GroupIndex×天×时段分组
 	const byGroupDaySlot = new Map();
     
@@ -618,8 +714,8 @@ function weekdayLabel(w){ return ['','周一','周二','周三','周四','周五
 /* 过滤 */
 function applyFilter() {
 	const kw = state.searchKeyword.trim().toLowerCase();
-	if (!kw) { state.filteredCourses = COURSES; return; }
-	state.filteredCourses = COURSES.filter(c => {
+	if (!kw) { state.filteredCourses = getCourses(); return; }
+	state.filteredCourses = getCourses().filter(c => {
 		return [c.name, c.teacher, c.room].some(v => String(v||'').toLowerCase().includes(kw));
 	});
 }
@@ -638,7 +734,7 @@ function getExistingCourseInfo() {
 function updateSelectedCredit() {
 	let total = 0;
 	for (const id of state.selectedIds) {
-		const c = COURSES.find(x => x.id === id);
+		const c = getCourses().find(x => x.id === id);
 		if (!c) continue;
 		const credit = CODE_TO_CREDIT[c.code] ?? c.credit ?? 0;
 		total += Number(credit) || 0;
@@ -678,7 +774,7 @@ function updateSelectedCredit() {
 function getSelectedCourseCodes() {
 	const codes = new Set();
 	for (const id of state.selectedIds) {
-		const c = COURSES.find(x => x.id === id);
+		const c = getCourses().find(x => x.id === id);
 		if (c && c.code) codes.add(c.code);
 	}
 	return codes;
@@ -690,7 +786,7 @@ function canSelectCourse(courseId) {
 }
 
 function wouldConflictWithSelected(courseId) {
-	const mainCourse = COURSES.find(c => c.id === courseId);
+	const mainCourse = getCourses().find(c => c.id === courseId);
 	if (!mainCourse) return false;
 
     // 定义内部检查函数
@@ -701,7 +797,7 @@ function wouldConflictWithSelected(courseId) {
         // 只检查周末课程
         if (course.weekday !== 6 && course.weekday !== 7) return false;
         
-        const selectedCourses = COURSES.filter(c => 
+        const selectedCourses = getCourses().filter(c => 
             state.selectedIds.has(c.id) && 
             (c.weekday === 6 || c.weekday === 7)
         );
@@ -733,7 +829,7 @@ function wouldConflictWithSelected(courseId) {
     if (checkSingle(mainCourse)) return true;
 
     // 关联检查：检查同 code 同 className 的其他部分（例如 MEM6306 的另一半）
-    const linkedCourses = COURSES.filter(c => 
+    const linkedCourses = getCourses().filter(c => 
         c.code === mainCourse.code && 
         c.className === mainCourse.className && 
         c.id !== courseId
@@ -773,7 +869,7 @@ function getRequiredCourseProgress(groupKey) {
 function calculateGPACredits() {
 	let gpaCredits = 0;
 	for (const id of state.selectedIds) {
-		const course = COURSES.find(c => c.id === id);
+		const course = getCourses().find(c => c.id === id);
 		if (course && course.gpa === true) {
 			const credit = CODE_TO_CREDIT[course.code] ?? course.credit ?? 0;
 			gpaCredits += Number(credit) || 0;
@@ -783,7 +879,7 @@ function calculateGPACredits() {
 }
 
 function calculateTotalConflicts() {
-	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id) && (c.weekday === 6 || c.weekday === 7));
+	const selectedCourses = getCourses().filter(c => state.selectedIds.has(c.id) && (c.weekday === 6 || c.weekday === 7));
 	
 	// 按周×天×时段分组（考虑周次重叠）
 	const byWeekDaySlot = new Map();
@@ -815,108 +911,11 @@ function calculateTotalConflicts() {
 }
 
 /* ICS日历导出功能 */
-// function exportICSCalendar() {
-// 	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id));
-//
-// 	if (selectedCourses.length === 0) {
-// 		alert('请先选择要导出的课程');
-// 		return;
-// 	}
-//
-// 	// ICS文件头部
-// 	let icsContent = [
-// 		'BEGIN:VCALENDAR',
-// 		'VERSION:2.0',
-// 		'PRODID:-//Course Selection System//Course Calendar//CN',
-// 		'CALSCALE:GREGORIAN',
-// 		'METHOD:PUBLISH',
-// 		'X-WR-CALNAME:我的课程表',
-// 		'X-WR-TIMEZONE:Asia/Shanghai',
-// 		'X-WR-CALDESC:从选课系统导出的课程表'
-// 	].join('\r\n') + '\r\n';
-//
-// 	// 为每门课程的每个上课时间创建事件
-// 	selectedCourses.forEach(course => {
-// 		// 只处理周末课程
-// 		if (course.weekday !== 6 && course.weekday !== 7) return;
-//
-// 		const weekSet = parseWeeks(course.weeks);
-// 		if (weekSet.size === 0) return;
-//
-// 		// 为每个上课周次创建事件
-// 		for (const weekNo of weekSet) {
-// 			const weekStart = getWeekStartByNo(weekNo);
-// 			const courseDate = dayjs(weekStart).add(course.weekday - 2, 'day'); // 转换为实际日期
-//
-// 			// 创建开始和结束时间
-// 			const startDateTime = courseDate.hour(parseInt(course.startTime.split(':')[0])).minute(parseInt(course.startTime.split(':')[1]));
-// 			const endDateTime = courseDate.hour(parseInt(course.endTime.split(':')[0])).minute(parseInt(course.endTime.split(':')[1]));
-//
-// 			// 格式化日期时间为ICS格式 (YYYYMMDDTHHMMSS)
-// 			const dtStart = startDateTime.format('YYYYMMDD[T]HHmmss');
-// 			const dtEnd = endDateTime.format('YYYYMMDD[T]HHmmss');
-// 			const dtStamp = dayjs().format('YYYYMMDD[T]HHmmss[Z]');
-//
-//             // 生成唯一的UID
-//             const uid = `${course.id}-${weekNo}-${dtStart}@course-selection-system`;
-//
-// 			// 创建课程描述
-// 			const description = [
-// 				`课程代码: ${course.code}`,
-// 				`授课老师: ${course.teacher || '未指定'}`,
-// 				`教室: ${course.room || '未指定'}`,
-// 				`学分: ${CODE_TO_CREDIT[course.code] || course.credit || '未知'}`,
-// 				`第${weekNo}周`,
-// 				course.gpa === true ? '计入GPA' : course.gpa === false ? '不计入GPA' : ''
-// 			].filter(Boolean).join('\\n');
-//
-// 			// 创建事件
-// 			const event = [
-// 				'BEGIN:VEVENT',
-// 				`UID:${uid}`,
-// 				`DTSTART:${dtStart}`,
-// 				`DTEND:${dtEnd}`,
-// 				`DTSTAMP:${dtStamp}`,
-// 				`SUMMARY:${course.name}`,
-// 				`DESCRIPTION:${description}`,
-// 				`LOCATION:${course.room || ''}`,
-// 				`STATUS:CONFIRMED`,
-// 				`TRANSP:OPAQUE`,
-// 				'END:VEVENT'
-// 			].join('\r\n') + '\r\n';
-//
-// 			icsContent += event;
-// 		}
-// 	});
-//
-// 	// ICS文件结尾
-// 	icsContent += 'END:VCALENDAR\r\n';
-//
-// 	// 创建并下载文件
-// 	const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-// 	const url = URL.createObjectURL(blob);
-// 	const link = document.createElement('a');
-// 	link.href = url;
-// 	link.download = `课程表_${dayjs().format('YYYY-MM-DD')}.ics`;
-// 	document.body.appendChild(link);
-// 	link.click();
-// 	document.body.removeChild(link);
-// 	URL.revokeObjectURL(url);
-//
-// 	// 统计信息
-// 	const totalEvents = selectedCourses.reduce((sum, course) => {
-// 		const weekSet = parseWeeks(course.weeks);
-// 		return sum + weekSet.size;
-// 	}, 0);
-//
-// 	const totalCredits = selectedCourses.reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
-//
-// 	alert(`ICS日历文件已生成！\n已导出 ${selectedCourses.length} 门课程，${totalEvents} 个课程事件\n总学分：${totalCredits}\n\n可导入到手机日历、Outlook、Google Calendar等应用中。`);
-// }
+// (旧代码已移除)
 
 /* 导入/导出功能 */
 function exportSelections() {
-	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id));
+	const selectedCourses = getCourses().filter(c => state.selectedIds.has(c.id));
 	const totalCredit = selectedCourses.reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
 	const gpaCredit = selectedCourses.filter(c => c.gpa === true).reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
 	const existingInfo = getExistingCourseInfo();
@@ -952,7 +951,7 @@ function exportSelections() {
 }
 
 function exportICSCalendar() {
-	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id));
+	const selectedCourses = getCourses().filter(c => state.selectedIds.has(c.id));
 	if (selectedCourses.length === 0) {
 		alert('请先选择课程');
 		return;
@@ -1028,7 +1027,7 @@ function importSelections(file) {
 			
 			// 验证课程ID是否存在
 			const existingIds = importData.selectedIds.filter(id => 
-				COURSES.some(c => c.id === id)
+				getCourses().some(c => c.id === id)
 			);
 			
 			// 验证课程代码不重复
@@ -1037,7 +1036,7 @@ function importSelections(file) {
 			let duplicateCount = 0;
 			
 			for (const id of existingIds) {
-				const course = COURSES.find(c => c.id === id);
+				const course = getCourses().find(c => c.id === id);
 				if (course && course.code) {
 					if (usedCodeMap.has(course.code)) {
                         const existingClassName = usedCodeMap.get(course.code);
@@ -1060,9 +1059,9 @@ function importSelections(file) {
             // 自动补全关联课程
             const idsToCheck = Array.from(state.selectedIds);
             for (const id of idsToCheck) {
-                const course = COURSES.find(c => c.id === id);
+                const course = getCourses().find(c => c.id === id);
                 if (course) {
-                    const linkedCourses = COURSES.filter(c => 
+                    const linkedCourses = getCourses().filter(c => 
                         c.code === course.code && 
                         c.className === course.className && 
                         !state.selectedIds.has(c.id)
@@ -1081,7 +1080,7 @@ function importSelections(file) {
 			updateSelectedCredit();
 			
 			// 计算实际导入的学分信息
-			const importedCourses = COURSES.filter(c => validIds.includes(c.id));
+			const importedCourses = getCourses().filter(c => validIds.includes(c.id));
 			const actualTotalCredit = importedCourses.reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
 			const actualGpaCredit = importedCourses.filter(c => c.gpa === true).reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
 			const actualTotalCreditWithExisting = actualTotalCredit + importedExistingInfo.gpaCredits + importedExistingInfo.nonGpaCredits;
@@ -1109,7 +1108,7 @@ function importSelections(file) {
 
 /* 课表图片下载功能 */
 function downloadScheduleImage() {
-	const selectedCourses = COURSES.filter(c => state.selectedIds.has(c.id) && (c.weekday === 6 || c.weekday === 7));
+	const selectedCourses = getCourses().filter(c => state.selectedIds.has(c.id) && (c.weekday === 6 || c.weekday === 7));
 	console.log('Selected courses for image:', selectedCourses.length, selectedCourses);
 	
 	// Debug: Show course details
@@ -1147,7 +1146,7 @@ function downloadScheduleImage() {
 	const totalCredits = (() => {
 		let total = 0;
 		for (const id of state.selectedIds) {
-			const c = COURSES.find(x => x.id === id);
+			const c = getCourses().find(x => x.id === id);
 			if (!c) continue;
 			const credit = CODE_TO_CREDIT[c.code] ?? c.credit ?? 0;
 			total += Number(credit) || 0;
@@ -1326,8 +1325,13 @@ const STORAGE_KEY = 'course-selection-data';
 
 function saveToLocalStorage() {
 	try {
+        // 更新当前学期的缓存
+        state.termData[state.currentTerm] = Array.from(state.selectedIds);
+
 		const data = {
-			selectedIds: Array.from(state.selectedIds),
+            currentTerm: state.currentTerm,
+			selectedIds: Array.from(state.selectedIds), // 兼容旧版
+            termData: state.termData, // 新增：所有学期数据
 			currentWeekNo: state.currentWeekNo,
 			searchKeyword: state.searchKeyword,
 			existingCourseInfo: getExistingCourseInfo(),
@@ -1345,18 +1349,34 @@ function loadFromLocalStorage() {
 		if (!saved) return false;
 		
 		const data = JSON.parse(saved);
-		if (!data || !Array.isArray(data.selectedIds)) return false;
+
+        if (data.currentTerm && COURSES_DATA[data.currentTerm]) {
+            state.currentTerm = data.currentTerm;
+        }
+
+        // 恢复 termData
+        if (data.termData) {
+            state.termData = data.termData;
+        }
+        
+        // 兼容旧数据：如果没有 termData 但有 selectedIds，将其归入当前学期
+        if (!state.termData[state.currentTerm] && Array.isArray(data.selectedIds)) {
+            state.termData[state.currentTerm] = data.selectedIds;
+        }
+
+        // 获取当前学期的 ID 列表
+        const currentTermIds = state.termData[state.currentTerm] || [];
 		
 		// 验证课程ID是否仍然有效
-		const validIds = data.selectedIds.filter(id => 
-			COURSES.some(c => c.id === id)
+		const validIds = currentTermIds.filter(id => 
+			getCourses().some(c => c.id === id)
 		);
 		
 		// 验证课程代码不重复（应用重复检查逻辑）
 		const usedCodeMap = new Map(); // code -> className
 		const finalValidIds = [];
 		for (const id of validIds) {
-			const course = COURSES.find(c => c.id === id);
+			const course = getCourses().find(c => c.id === id);
 			if (course && course.code) {
 				if (usedCodeMap.has(course.code)) {
                     // 如果已存在该代码，检查 className 是否一致
@@ -1378,9 +1398,9 @@ function loadFromLocalStorage() {
         // 自动补全关联课程（防止旧数据不完整）
         const idsToCheck = Array.from(state.selectedIds);
         for (const id of idsToCheck) {
-            const course = COURSES.find(c => c.id === id);
+            const course = getCourses().find(c => c.id === id);
             if (course) {
-                const linkedCourses = COURSES.filter(c => 
+                const linkedCourses = getCourses().filter(c => 
                     c.code === course.code && 
                     c.className === course.className && 
                     !state.selectedIds.has(c.id)
@@ -1401,7 +1421,7 @@ function loadFromLocalStorage() {
 			state.existingCourseInfo = normalizeExistingCourseInfo(data.existingCourseInfo);
 		}
 		
-		return finalValidIds.length > 0;
+		return true; // 只要读取成功就算成功，即使 selectedIds 为空
 		
 	} catch (error) {
 		console.warn('无法从本地存储加载:', error);
@@ -1427,7 +1447,7 @@ function generateRecommendations() {
 	// 1. Group available sections by code
 	const optionsByCode = new Map();
 	for (const code of selectedCodes) {
-		const sections = COURSES.filter(c => c.code === code);
+		const sections = getCourses().filter(c => c.code === code);
 		if (sections.length > 0) {
             // 按 className 分组，同一 className 的所有课程ID作为一个选项
             const classGroups = new Map();
@@ -1520,26 +1540,40 @@ function generateRecommendations() {
 
 function calculatePlanScore(selectedIds) {
 	let score = 100;
-	const courses = COURSES.filter(c => selectedIds.has(c.id));
+	const courses = getCourses().filter(c => selectedIds.has(c.id));
+    const weekendCourses = courses.filter(c => c.weekday === 6 || c.weekday === 7);
+    
+    // Pre-calculate weeks and time ranges to avoid repeated parsing in loops
+    const courseMeta = weekendCourses.map(c => ({
+        course: c,
+        weeks: parseWeeks(c.weeks),
+        startMin: minutesSinceStart(c.startTime),
+        endMin: minutesSinceStart(c.endTime)
+    }));
 	
 	// Check conflicts
     let conflicts = 0;
-	// Simple pair-wise check
-    // Optimizing: filter only weekend courses for conflict check as per existing logic
-    const weekendCourses = courses.filter(c => c.weekday === 6 || c.weekday === 7);
     
-    for (let i = 0; i < weekendCourses.length; i++) {
-        for (let j = i + 1; j < weekendCourses.length; j++) {
-            const c1 = weekendCourses[i];
-            const c2 = weekendCourses[j];
-            if (c1.weekday === c2.weekday) {
+    for (let i = 0; i < courseMeta.length; i++) {
+        for (let j = i + 1; j < courseMeta.length; j++) {
+            const m1 = courseMeta[i];
+            const m2 = courseMeta[j];
+            
+            if (m1.course.weekday === m2.course.weekday) {
                 // Check weeks overlap
-                const w1 = parseWeeks(c1.weeks);
-                const w2 = parseWeeks(c2.weeks);
-                const hasWeekOverlap = [...w1].some(w => w2.has(w));
+                let hasWeekOverlap = false;
+                // Optimization: iterate over the smaller set
+                const [small, large] = m1.weeks.size < m2.weeks.size ? [m1.weeks, m2.weeks] : [m2.weeks, m1.weeks];
+                for (const w of small) {
+                    if (large.has(w)) {
+                        hasWeekOverlap = true;
+                        break;
+                    }
+                }
+                
                 if (hasWeekOverlap) {
                     // Check time overlap
-                    if (timeRangesOverlap(c1.startTime, c1.endTime, c2.startTime, c2.endTime)) {
+                    if (m1.startMin < m2.endMin && m2.startMin < m1.endMin) {
                         conflicts++;
                     }
                 }
@@ -1550,17 +1584,14 @@ function calculatePlanScore(selectedIds) {
 	score -= conflicts * 100; // Heavy penalty for conflicts
 
 	// Check optimization: Same room for AM/PM on same day
-	// Group by (weekday + date/weeks?) 
-    // Simplified: Just check if same weekday courses are in same room
     const byDay = new Map();
-    for (const c of weekendCourses) {
-        if (!byDay.has(c.weekday)) byDay.set(c.weekday, []);
-        byDay.get(c.weekday).push(c);
+    for (const m of courseMeta) {
+        const day = m.course.weekday;
+        if (!byDay.has(day)) byDay.set(day, []);
+        byDay.get(day).push(m.course);
     }
     
     for (const [day, dayCourses] of byDay) {
-        // If multiple courses on same day have same room, bonus
-        // Check pairs
         for (let i = 0; i < dayCourses.length; i++) {
             for (let j = i + 1; j < dayCourses.length; j++) {
                 if (dayCourses[i].room === dayCourses[j].room && dayCourses[i].room) {
@@ -1610,13 +1641,11 @@ function applyNextRecommendation() {
     }
     
     const plan = state.recommendPlans[nextIndex];
-    state.currentPlanIndex = nextIndex;
-    state.selectedIds = new Set(plan.ids);
     
-    saveToLocalStorage();
-    renderCourseList();
-    refreshCalendar();
-    updateSelectedCredit();
+    setState({
+        currentPlanIndex: nextIndex,
+        selectedIds: new Set(plan.ids)
+    }, { renderCalendar: true });
     
     const rank = nextIndex + 1;
     const total = state.recommendPlans.length;
@@ -1634,12 +1663,38 @@ function refreshCalendar() {
 
 /* 事件绑定 */
 function bindEvents() {
-	searchInputEl.addEventListener('input', () => {
-		state.searchKeyword = searchInputEl.value;
-		saveToLocalStorage();
+    const termSelect = document.getElementById('termSelect');
+    if (termSelect) {
+        termSelect.addEventListener('change', (e) => {
+            const newTerm = e.target.value;
+            if (newTerm !== state.currentTerm) {
+                // 1. 保存当前学期数据
+                state.termData[state.currentTerm] = Array.from(state.selectedIds);
+                
+                // 2. 准备新状态
+                const nextTerm = newTerm;
+                const newCourses = COURSES_DATA[nextTerm] || [];
+
+                const newIds = state.termData[nextTerm] || [];
+                const validIds = newIds.filter(id => newCourses.some(c => c.id === id));
+                
+                setState({
+                    currentTerm: nextTerm,
+                    filteredCourses: newCourses,
+                    selectedIds: new Set(validIds),
+                    recommendPlans: [],
+                    currentWeekStart: startOfWeek(dayjs(TERM_ANCHORS[nextTerm]).toDate()),
+                    currentWeekNo: 1
+                }, { renderCalendar: true });
+            }
+        });
+    }
+
+	searchInputEl.addEventListener('input', debounce(() => {
+		setState({ searchKeyword: searchInputEl.value });
 		applyFilter();
 		renderCourseList();
-	});
+	}, 300));
     courseTbodyEl.addEventListener('click', (e) => {
         // 处理行展开/折叠
         const groupRow = e.target.closest('.group-row');
@@ -1672,7 +1727,7 @@ function bindEvents() {
             if (t.checked) {
                 // 选中：默认选第一个班级（及其所有分段）
                 // 清理同代码的其他选择
-                const allCoursesWithCode = COURSES.filter(c => c.code === code);
+                const allCoursesWithCode = getCourses().filter(c => c.code === code);
                 allCoursesWithCode.forEach(c => state.selectedIds.delete(c.id));
                 
                 if (groupCourses.length > 0) {
@@ -1684,15 +1739,11 @@ function bindEvents() {
                 }
             } else {
                 // 取消选中：清除该组所有已选
-                const allCoursesWithCode = COURSES.filter(c => c.code === code);
+                const allCoursesWithCode = getCourses().filter(c => c.code === code);
                 allCoursesWithCode.forEach(c => state.selectedIds.delete(c.id));
             }
             
-            state.recommendPlans = [];
-            saveToLocalStorage();
-            renderCourseList();
-            refreshCalendar();
-            updateSelectedCredit();
+            setState({ recommendPlans: [] }, { renderCalendar: true });
             return;
         }
 
@@ -1700,12 +1751,12 @@ function bindEvents() {
 			const id = Number(t.dataset.id);
 			
 			if (t.checked) {
-                const currentCourse = COURSES.find(c => c.id === id);
+                const currentCourse = getCourses().find(c => c.id === id);
                 
                 if (currentCourse) {
                     // 1. 联动选中：选中同代码且同班级名（className）的其他课程分段
                     // （例如 MEM6306 上午和下午是同一个班级，需要同时选中）
-                    const linkedCourses = COURSES.filter(c => 
+                    const linkedCourses = getCourses().filter(c => 
                         c.code === currentCourse.code && 
                         c.className === currentCourse.className
                     );
@@ -1714,7 +1765,7 @@ function bindEvents() {
                     // 2. 互斥逻辑：取消同代码但不同班级名（className）的课程
                     // （例如 MEM8305 有两个不同班级，选了S01就不能选S02）
                     const conflictCourses = Array.from(state.selectedIds).filter(sid => {
-                        const c = COURSES.find(x => x.id === sid);
+                        const c = getCourses().find(x => x.id === sid);
                         return c && c.code === currentCourse.code && c.className !== currentCourse.className;
                     });
                     conflictCourses.forEach(sid => state.selectedIds.delete(sid));
@@ -1729,9 +1780,9 @@ function bindEvents() {
 				state.selectedIds.delete(id);
                 
                 // 联动取消：取消同代码且同班级名（className）的其他课程分段
-                const currentCourse = COURSES.find(c => c.id === id);
+                const currentCourse = getCourses().find(c => c.id === id);
                 if (currentCourse) {
-                    const linkedCourses = COURSES.filter(c => 
+                    const linkedCourses = getCourses().filter(c => 
                         c.code === currentCourse.code && 
                         c.className === currentCourse.className && 
                         c.id !== id
@@ -1740,51 +1791,38 @@ function bindEvents() {
                 }
 			}
 			
-			// 清除推荐方案缓存
-			state.recommendPlans = [];
-			// 保存到本地存储
-			saveToLocalStorage();
-			
-			// 重新渲染以更新可选状态
-			renderCourseList();
-			refreshCalendar();
-			updateSelectedCredit();
+            setState({ recommendPlans: [] }, { renderCalendar: true });
 		}
 	});
 	clearSelectionBtn.addEventListener('click', () => {
 		state.selectedIds.clear();
-		state.recommendPlans = [];
-		saveToLocalStorage();
-		renderCourseList();
-		refreshCalendar();
-		updateSelectedCredit();
+        setState({ recommendPlans: [] });
 	});
 	exportBtn.addEventListener('click', () => {
 		exportSelections();
 	});
     if (toggleCompressBtn) {
         toggleCompressBtn.addEventListener('click', () => {
-            state.isCompressed = !state.isCompressed;
-            toggleCompressBtn.innerHTML = state.isCompressed ? 
+            const newCompressed = !state.isCompressed;
+            toggleCompressBtn.innerHTML = newCompressed ? 
                 '<i class="ri-expand-left-right-line"></i> 原始视图' : 
                 '<i class="ri-contract-left-right-line"></i> 压缩视图';
-            toggleCompressBtn.classList.toggle('btn-primary', state.isCompressed);
-            toggleCompressBtn.classList.toggle('btn-outline', !state.isCompressed);
+            toggleCompressBtn.classList.toggle('btn-primary', newCompressed);
+            toggleCompressBtn.classList.toggle('btn-outline', !newCompressed);
             
-            renderCalendarGrid();
-            renderEvents();
+            setState({ isCompressed: newCompressed }, { renderCalendar: true });
         });
     }
     if (toggleListCompressBtn) {
         toggleListCompressBtn.addEventListener('click', () => {
-            state.isListCompressed = !state.isListCompressed;
-            toggleListCompressBtn.innerHTML = state.isListCompressed ? 
+            const newListCompressed = !state.isListCompressed;
+            toggleListCompressBtn.innerHTML = newListCompressed ? 
                 '<i class="ri-expand-left-right-line"></i> 原始视图' : 
                 '<i class="ri-contract-left-right-line"></i> 压缩视图';
-            toggleListCompressBtn.classList.toggle('btn-primary', state.isListCompressed);
-            toggleListCompressBtn.classList.toggle('btn-outline', !state.isListCompressed);
+            toggleListCompressBtn.classList.toggle('btn-primary', newListCompressed);
+            toggleListCompressBtn.classList.toggle('btn-outline', !newListCompressed);
             
-            renderCourseList();
+            setState({ isListCompressed: newListCompressed });
         });
     }
     // 移除旧的组头点击事件
@@ -1832,35 +1870,23 @@ function bindEvents() {
 			const courseId = Number(btn.dataset.courseId);
 			if (courseId && state.selectedIds.has(courseId)) {
 				state.selectedIds.delete(courseId);
-				state.recommendPlans = [];
-				saveToLocalStorage();
-				// 重新渲染
-				renderCourseList();
-				refreshCalendar();
-				updateSelectedCredit();
+                setState({ recommendPlans: [] }, { renderCalendar: true });
 			}
 		}
 	});
 	prevWeekBtn.addEventListener('click', () => {
-		state.currentWeekNo = Math.max(1, state.currentWeekNo - 1);
-		state.currentWeekStart = getWeekStartByNo(state.currentWeekNo);
-		saveToLocalStorage();
-		updateWeekTitle();
-		// renderCalendarGrid(); // No need to re-render grid on week change unless we want to highlight? 
-        // Actually original code did re-render. But grid is static 1-18.
-        // If compressed, grid depends on selection, not currentWeekNo.
-        // So we don't need to re-render grid here.
-		renderEvents();
-		updateSelectedCredit();
+		const newWeek = Math.max(1, state.currentWeekNo - 1);
+        setState({
+            currentWeekNo: newWeek,
+            currentWeekStart: getWeekStartByNo(newWeek)
+        });
 	});
 	nextWeekBtn.addEventListener('click', () => {
-		state.currentWeekNo = Math.min(MAX_WEEKS, state.currentWeekNo + 1);
-		state.currentWeekStart = getWeekStartByNo(state.currentWeekNo);
-		saveToLocalStorage();
-		updateWeekTitle();
-		// renderCalendarGrid();
-		renderEvents();
-		updateSelectedCredit();
+		const newWeek = Math.min(MAX_WEEKS, state.currentWeekNo + 1);
+        setState({
+            currentWeekNo: newWeek,
+            currentWeekStart: getWeekStartByNo(newWeek)
+        });
 	});
 	// Removed event listeners for non-existent DOM elements
 	window.addEventListener('resize', () => {
@@ -1876,19 +1902,31 @@ function updateWeekTitle() {
 
 /* 初始化 */
 function init() {
-	// 将 COURSES 的学分用映射覆盖
-	for (const c of COURSES) {
-		if (c.code && CODE_TO_CREDIT[c.code] != null) c.credit = CODE_TO_CREDIT[c.code];
-	}
-	
-	// 尝试从本地存储加载数据
+    // 尝试从本地存储加载数据
 	const loaded = loadFromLocalStorage();
+
+    // 设置下拉框的值
+    const termSelect = document.getElementById('termSelect');
+    if (termSelect) {
+        termSelect.value = state.currentTerm;
+    }
+
+    // 初始化 filteredCourses
+    state.filteredCourses = getCourses();
+
+	// 将所有学期的课程学分用映射覆盖
+    for (const term in COURSES_DATA) {
+        for (const c of COURSES_DATA[term]) {
+            if (c.code && CODE_TO_CREDIT[c.code] != null) c.credit = CODE_TO_CREDIT[c.code];
+        }
+    }
 	
 	// 如果没有加载到数据，使用默认值
 	if (!loaded) {
 		state.currentWeekNo = 1;
-		state.currentWeekStart = getWeekStartByNo(state.currentWeekNo);
 	}
+    // 总是重新计算 currentWeekStart
+    state.currentWeekStart = getWeekStartByNo(state.currentWeekNo);
 	
 	updateWeekTitle();
 	renderCalendarGrid();
@@ -2062,9 +2100,7 @@ function initExistingInfoModal() {
 			gpaCredits: existingGpaCreditsInputEl ? existingGpaCreditsInputEl.value : 0,
 			nonGpaCredits: existingNonGpaCreditsInputEl ? existingNonGpaCreditsInputEl.value : 0
 		});
-		state.existingCourseInfo = nextInfo;
-		saveToLocalStorage();
-		updateSelectedCredit();
+        setState({ existingCourseInfo: nextInfo });
 		closeModal();
 	});
 }
