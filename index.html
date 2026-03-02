@@ -15,6 +15,8 @@
 	<script>dayjs.locale('zh-cn');</script>
 	<!-- xlsx -->
 	<script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.2/dist/xlsx.full.min.js"></script>
+    <!-- qrcode (node-qrcode) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -181,6 +183,21 @@
                         <button id="saveExistingInfoBtn" class="btn btn-primary" type="submit">保存</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    <!-- 导出日历弹窗 -->
+    <div id="exportICSModal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="closeExportICSModalBtn" class="modal-close" title="关闭"><i class="ri-close-line"></i></button>
+            <div class="modal-body" style="text-align: center;">
+                <div class="modal-icon primary" style="margin: 0 auto 1rem;"><i class="ri-qr-code-line"></i></div>
+                <h3>同步课程表到手机</h3>
+                <p>手机扫描下方二维码，下载文件使用日历app打开，即可导入到手机</p>
+                <div id="qrcode" class="qrcode-container" style="display: flex; justify-content: center; margin: 20px auto;"></div>
+                <div class="modal-actions" style="margin-top: 20px; text-align: center; justify-content: center;">
+                    <button id="downloadICSFileBtn" class="btn btn-primary" type="button"><i class="ri-download-line"></i> 下载日历文件 (.ics)</button>
+                </div>
             </div>
         </div>
     </div>

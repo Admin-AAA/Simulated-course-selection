@@ -950,68 +950,63 @@ function exportSelections() {
 	alert(message);
 }
 
-function exportICSCalendar() {
-	const selectedCourses = getCourses().filter(c => state.selectedIds.has(c.id));
-	if (selectedCourses.length === 0) {
-		alert('请先选择课程');
-		return;
-	}
-
-	const escapeICSField = (value) => String(value ?? '')
-		.replace(/\\/g, '\\\\')
-		.replace(/\n/g, '\\n')
-		.replace(/,/g, '\\,')
-		.replace(/;/g, '\\;');
-	const calendarTimezone = 'Asia/Shanghai';
-	
-	let icsContent = `BEGIN:VCALENDAR
+/* ICS 日历导出功能 */
+function generateICSContent(selectedCourses) {
+    const escapeICSField = (value) => String(value ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/\n/g, '\\n')
+        .replace(/,/g, '\\,')
+        .replace(/;/g, '\\;');
+    const calendarTimezone = 'Asia/Shanghai';
+    
+    let icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Course Selection System//Course Schedule//EN
 CALSCALE:GREGORIAN
 X-WR-TIMEZONE:${calendarTimezone}
 `;
-	
-	selectedCourses.forEach(course => {
-		const weekSet = parseWeeks(course.weeks);
-		if (weekSet.size === 0) return;
+    
+    selectedCourses.forEach(course => {
+        const weekSet = parseWeeks(course.weeks);
+        if (weekSet.size === 0) return;
 
-		const weekNos = Array.from(weekSet).sort((a, b) => a - b);
-		const firstWeekNo = weekNos[0];
-		const lastWeekNo = weekNos[weekNos.length - 1];
-		const spanCount = lastWeekNo - firstWeekNo + 1;
+        const weekNos = Array.from(weekSet).sort((a, b) => a - b);
+        const firstWeekNo = weekNos[0];
+        const lastWeekNo = weekNos[weekNos.length - 1];
+        const spanCount = lastWeekNo - firstWeekNo + 1;
 
-		const startTime = course.startTime;
-		const endTime = course.endTime;
-		const firstWeekStart = getWeekStartByNo(firstWeekNo);
-		const firstCourseDate = dayjs(firstWeekStart).add(course.weekday - 2, 'day'); // weekday 1=周一, 7=周日
+        const startTime = course.startTime;
+        const endTime = course.endTime;
+        const firstWeekStart = getWeekStartByNo(firstWeekNo);
+        const firstCourseDate = dayjs(firstWeekStart).add(course.weekday - 2, 'day'); // weekday 1=周一, 7=周日
 
-		const eventStart = firstCourseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
-		const eventEnd = firstCourseDate.format('YYYYMMDD') + 'T' + endTime.replace(':', '') + '00';
-		const dtStamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+        const eventStart = firstCourseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
+        const eventEnd = firstCourseDate.format('YYYYMMDD') + 'T' + endTime.replace(':', '') + '00';
+        const dtStamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 
-		const uid = `course-${course.id}-${state.currentTerm}@course-selection`;
-		const summary = escapeICSField(`${course.code} ${course.name}`);
-		const location = escapeICSField(course.room || '');
-		const description = escapeICSField(`教师: ${course.teacher || ''} | 学分: ${CODE_TO_CREDIT[course.code] ?? course.credit ?? ''}`);
+        const uid = `course-${course.id}-${state.currentTerm}@course-selection`;
+        const summary = escapeICSField(`${course.code} ${course.name}`);
+        const location = escapeICSField(course.room || '');
+        const description = escapeICSField(`教师: ${course.teacher || ''} | 学分: ${CODE_TO_CREDIT[course.code] ?? course.credit ?? ''}`);
 
-		let exdateLines = '';
-		if (spanCount > weekNos.length) {
-			const weekNoSet = new Set(weekNos);
-			for (let w = firstWeekNo; w <= lastWeekNo; w++) {
-				if (weekNoSet.has(w)) continue;
-				const weekStart = getWeekStartByNo(w);
-				const courseDate = dayjs(weekStart).add(course.weekday - 2, 'day');
-				const exdateValue = courseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
-				exdateLines += `EXDATE;TZID=${calendarTimezone}:${exdateValue}\n`;
-			}
-		}
+        let exdateLines = '';
+        if (spanCount > weekNos.length) {
+            const weekNoSet = new Set(weekNos);
+            for (let w = firstWeekNo; w <= lastWeekNo; w++) {
+                if (weekNoSet.has(w)) continue;
+                const weekStart = getWeekStartByNo(w);
+                const courseDate = dayjs(weekStart).add(course.weekday - 2, 'day');
+                const exdateValue = courseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
+                exdateLines += `EXDATE;TZID=${calendarTimezone}:${exdateValue}\n`;
+            }
+        }
 
-		let rruleLine = '';
-		if (weekNos.length > 1) {
-			rruleLine = `RRULE:FREQ=WEEKLY;COUNT=${spanCount}`;
-		}
+        let rruleLine = '';
+        if (weekNos.length > 1) {
+            rruleLine = `RRULE:FREQ=WEEKLY;COUNT=${spanCount}`;
+        }
 
-		icsContent += `BEGIN:VEVENT
+        icsContent += `BEGIN:VEVENT
 UID:${uid}
 DTSTAMP:${dtStamp}
 DTSTART;TZID=${calendarTimezone}:${eventStart}
@@ -1021,20 +1016,103 @@ LOCATION:${location}
 DESCRIPTION:${description}
 END:VEVENT
 `;
-	});
-	
-	icsContent += 'END:VCALENDAR';
-	
-	// 直接下载文件
-	const dataBlob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-	const link = document.createElement('a');
-	link.href = URL.createObjectURL(dataBlob);
-	link.download = `课程表_${dayjs().format('YYYY-MM-DD')}.ics`;
-	document.body.appendChild(link);
-	link.click();
-	document.body.removeChild(link);
-	
-	alert(`已导出 ${selectedCourses.length} 门课程到ICS日历文件`);
+    });
+    
+    icsContent += 'END:VCALENDAR';
+    return icsContent;
+}
+
+function downloadICSContent(icsContent) {
+    const dataBlob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `课程表_${dayjs().format('YYYY-MM-DD')}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function showExportICSModal(icsContent) {
+    const modal = document.getElementById('exportICSModal');
+    const closeBtn = document.getElementById('closeExportICSModalBtn');
+    const downloadBtn = document.getElementById('downloadICSFileBtn');
+    const qrcodeContainer = document.getElementById('qrcode');
+    
+    if (!modal || !qrcodeContainer) return;
+
+    // 清空二维码
+    qrcodeContainer.innerHTML = '';
+    
+    // 生成 URL
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.searchParams.set('term', state.currentTerm);
+    url.searchParams.set('selected', Array.from(state.selectedIds).join(','));
+    url.searchParams.set('download', 'true'); // 告诉手机打开后自动提示下载
+    
+    const qrText = url.toString();
+    
+    // 二维码生成
+    const QRLib = window.QRCode || QRCode;
+    const qrOptions = { 
+        errorCorrectionLevel: 'M',
+        width: 200,
+        margin: 1
+    };
+    
+    // 直接生成 Canvas
+    const canvas = document.createElement('canvas');
+    qrcodeContainer.appendChild(canvas);
+    
+    // 渲染
+    if (typeof QRLib !== 'undefined' && typeof QRLib.toCanvas === 'function') {
+        QRLib.toCanvas(canvas, qrText, qrOptions);
+    } else {
+         qrcodeContainer.innerHTML = '<p style="color:red; text-align:center;">二维码组件加载失败<br>请直接下载文件</p>';
+    }
+
+    // 绑定下载按钮
+    downloadBtn.onclick = () => {
+        downloadICSContent(icsContent);
+    };
+    
+    modal.classList.add('active');
+    
+    const closeModal = () => {
+        modal.classList.remove('active');
+    };
+
+    closeBtn.onclick = closeModal;
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
+}
+
+
+function exportICSCalendar(isSilent = false) {
+	const selectedCourses = getCourses().filter(c => state.selectedIds.has(c.id));
+	if (selectedCourses.length === 0) {
+		if (!isSilent) alert('请先选择课程');
+		return;
+	}
+
+    const icsContent = generateICSContent(selectedCourses);
+    
+    // 如果是静默模式（自动下载），直接下载不弹窗
+    if (isSilent) {
+        downloadICSContent(icsContent);
+        return;
+    }
+    
+    // 简单的移动端检测
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        downloadICSContent(icsContent);
+	    alert(`已导出 ${selectedCourses.length} 门课程到ICS日历文件`);
+    } else {
+        showExportICSModal(icsContent);
+    }
 }
 
 function importSelections(file) {
@@ -1927,10 +2005,55 @@ function updateWeekTitle() {
 	weekTitleEl.textContent = `第${state.currentWeekNo}周  ${start.format('YYYY/MM/DD')} - ${end.format('YYYY/MM/DD')} (周末课程视图)`;
 }
 
+/* URL 参数解析 */
+function parseUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const term = params.get('term');
+    const selected = params.get('selected');
+    const autoDownload = params.get('download');
+    
+    let hasParams = false;
+
+    // 检查并设置学期
+    if (term && COURSES_DATA[term]) {
+        state.currentTerm = term;
+        hasParams = true;
+    }
+    
+    // 检查并设置选中课程
+    if (selected) {
+        const ids = selected.split(',').map(Number).filter(n => !isNaN(n));
+        if (ids.length > 0) {
+            state.selectedIds = new Set(ids);
+            hasParams = true;
+        }
+    }
+
+    // 自动下载触发
+    if (autoDownload === 'true' && hasParams) {
+        setTimeout(() => {
+            if (confirm('检测到来自扫码的课程表，是否立即下载日历文件？')) {
+                exportICSCalendar(true); // 传入 true 强制直接下载，不弹窗
+            }
+        }, 800);
+    }
+    
+    return hasParams;
+}
+
 /* 初始化 */
 function init() {
-    // 尝试从本地存储加载数据
-	const loaded = loadFromLocalStorage();
+    // 优先从 URL 参数加载
+    const loadedFromUrl = parseUrlParams();
+
+    // 如果没有 URL 参数，尝试从本地存储加载数据
+	let loaded = false;
+    if (!loadedFromUrl) {
+        loaded = loadFromLocalStorage();
+    } else {
+        console.log('从 URL 参数恢复了选课状态');
+        loaded = true;
+    }
 
     // 设置下拉框的值
     const termSelect = document.getElementById('termSelect');
