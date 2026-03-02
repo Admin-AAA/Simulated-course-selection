@@ -962,10 +962,13 @@ function exportICSCalendar() {
 		.replace(/\n/g, '\\n')
 		.replace(/,/g, '\\,')
 		.replace(/;/g, '\\;');
+	const calendarTimezone = 'Asia/Shanghai';
 	
 	let icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Course Selection System//Course Schedule//EN
+CALSCALE:GREGORIAN
+X-WR-TIMEZONE:${calendarTimezone}
 `;
 	
 	selectedCourses.forEach(course => {
@@ -980,7 +983,7 @@ PRODID:-//Course Selection System//Course Schedule//EN
 		// 生成每个周次的VEVENT
 		for (const weekNo of weekSet) {
 			const weekStart = getWeekStartByNo(weekNo);
-			const courseDate = dayjs(weekStart).add(course.weekday - 1, 'day'); // weekday 1=周一, 7=周日
+			const courseDate = dayjs(weekStart).add(course.weekday - 2, 'day'); // weekday 1=周一, 7=周日
 			
 			const eventStart = courseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
 			const eventEnd = courseDate.format('YYYYMMDD') + 'T' + endTime.replace(':', '') + '00';
@@ -992,8 +995,8 @@ PRODID:-//Course Selection System//Course Schedule//EN
 			
 			icsContent += `BEGIN:VEVENT
 UID:${uid}
-DTSTART:${eventStart}
-DTEND:${eventEnd}
+DTSTART;TZID=${calendarTimezone}:${eventStart}
+DTEND;TZID=${calendarTimezone}:${eventEnd}
 SUMMARY:${summary}
 LOCATION:${location}
 DESCRIPTION:${description}
