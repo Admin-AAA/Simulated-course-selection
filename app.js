@@ -956,6 +956,12 @@ function exportICSCalendar() {
 		alert('请先选择课程');
 		return;
 	}
+
+	const escapeICSField = (value) => String(value ?? '')
+		.replace(/\\/g, '\\\\')
+		.replace(/\n/g, '\\n')
+		.replace(/,/g, '\\,')
+		.replace(/;/g, '\\;');
 	
 	let icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
@@ -974,15 +980,15 @@ PRODID:-//Course Selection System//Course Schedule//EN
 		// 生成每个周次的VEVENT
 		for (const weekNo of weekSet) {
 			const weekStart = getWeekStartByNo(weekNo);
-			const courseDate = dayjs(weekStart).add(course.weekday - 2, 'day'); // weekday 1=周一, 7=周日
+			const courseDate = dayjs(weekStart).add(course.weekday - 1, 'day'); // weekday 1=周一, 7=周日
 			
 			const eventStart = courseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
 			const eventEnd = courseDate.format('YYYYMMDD') + 'T' + endTime.replace(':', '') + '00';
 			
 			const uid = `course-${course.id}-week${weekNo}-${eventStart}@course-selection`;
-			const summary = `${course.code} ${course.name}`;
-			const location = course.room || '';
-			const description = `教师: ${course.teacher || ''} | 学分: ${CODE_TO_CREDIT[course.code] ?? course.credit ?? ''}`;
+			const summary = escapeICSField(`${course.code} ${course.name}`);
+			const location = escapeICSField(course.room || '');
+			const description = escapeICSField(`教师: ${course.teacher || ''} | 学分: ${CODE_TO_CREDIT[course.code] ?? course.credit ?? ''}`);
 			
 			icsContent += `BEGIN:VEVENT
 UID:${uid}
