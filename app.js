@@ -973,36 +973,54 @@ X-WR-TIMEZONE:${calendarTimezone}
 	
 	selectedCourses.forEach(course => {
 		const weekSet = parseWeeks(course.weeks);
-		if (weekSet.size === 0) return; // 跳过无周次信息的课程
-		
-		// 计算课程的开始和结束日期
-		const firstDate = dayjs(course.firstDate);
+		if (weekSet.size === 0) return;
+
+		const weekNos = Array.from(weekSet).sort((a, b) => a - b);
+		const firstWeekNo = weekNos[0];
+		const lastWeekNo = weekNos[weekNos.length - 1];
+		const spanCount = lastWeekNo - firstWeekNo + 1;
+
 		const startTime = course.startTime;
 		const endTime = course.endTime;
-		
-		// 生成每个周次的VEVENT
-		for (const weekNo of weekSet) {
-			const weekStart = getWeekStartByNo(weekNo);
-			const courseDate = dayjs(weekStart).add(course.weekday - 2, 'day'); // weekday 1=周一, 7=周日
-			
-			const eventStart = courseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
-			const eventEnd = courseDate.format('YYYYMMDD') + 'T' + endTime.replace(':', '') + '00';
-			
-			const uid = `course-${course.id}-week${weekNo}-${eventStart}@course-selection`;
-			const summary = escapeICSField(`${course.code} ${course.name}`);
-			const location = escapeICSField(course.room || '');
-			const description = escapeICSField(`教师: ${course.teacher || ''} | 学分: ${CODE_TO_CREDIT[course.code] ?? course.credit ?? ''}`);
-			
-			icsContent += `BEGIN:VEVENT
+		const firstWeekStart = getWeekStartByNo(firstWeekNo);
+		const firstCourseDate = dayjs(firstWeekStart).add(course.weekday - 2, 'day'); // weekday 1=周一, 7=周日
+
+		const eventStart = firstCourseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
+		const eventEnd = firstCourseDate.format('YYYYMMDD') + 'T' + endTime.replace(':', '') + '00';
+		const dtStamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+
+		const uid = `course-${course.id}-${state.currentTerm}@course-selection`;
+		const summary = escapeICSField(`${course.code} ${course.name}`);
+		const location = escapeICSField(course.room || '');
+		const description = escapeICSField(`教师: ${course.teacher || ''} | 学分: ${CODE_TO_CREDIT[course.code] ?? course.credit ?? ''}`);
+
+		let exdateLines = '';
+		if (spanCount > weekNos.length) {
+			const weekNoSet = new Set(weekNos);
+			for (let w = firstWeekNo; w <= lastWeekNo; w++) {
+				if (weekNoSet.has(w)) continue;
+				const weekStart = getWeekStartByNo(w);
+				const courseDate = dayjs(weekStart).add(course.weekday - 2, 'day');
+				const exdateValue = courseDate.format('YYYYMMDD') + 'T' + startTime.replace(':', '') + '00';
+				exdateLines += `EXDATE;TZID=${calendarTimezone}:${exdateValue}\n`;
+			}
+		}
+
+		let rruleLine = '';
+		if (weekNos.length > 1) {
+			rruleLine = `RRULE:FREQ=WEEKLY;COUNT=${spanCount}`;
+		}
+
+		icsContent += `BEGIN:VEVENT
 UID:${uid}
+DTSTAMP:${dtStamp}
 DTSTART;TZID=${calendarTimezone}:${eventStart}
 DTEND;TZID=${calendarTimezone}:${eventEnd}
-SUMMARY:${summary}
+${rruleLine ? `${rruleLine}\n` : ''}${exdateLines}SUMMARY:${summary}
 LOCATION:${location}
 DESCRIPTION:${description}
 END:VEVENT
 `;
-		}
 	});
 	
 	icsContent += 'END:VCALENDAR';
