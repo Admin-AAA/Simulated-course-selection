@@ -10,7 +10,8 @@ function debounce(func, wait) {
 
 const TERM_ANCHORS = {
     '25_autumn': '2025-09-08',
-    '26_spring': '2026-03-02'
+    '26_spring': '2026-03-02',
+    '26_autumn': '2026-09-14'
 };
 const MAX_WEEKS = 18; // 最大周数
 
@@ -114,13 +115,48 @@ const COURSES_DATA = {
     { id: 14, code: "必选A", name: "学术英语", className: "请看课表", credit: "2", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "08:00", endTime: "11:30", room: "工程馆", gpa: true },
     { id: 15, code: "必选B", name: "新中特", className: "请看课表", credit: "2", firstDate: "2026-03-07", teacher: "", capacity: 0, weeks: "1-8周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: true },
     { id: 16, code: "必选C", name: "自然辩证法概论", className: "请看课表", credit: "1", firstDate: "2026-05-16", teacher: "", capacity: 0, weeks: "11-14周", weekday: 6, startTime: "12:55", endTime: "16:25", room: "工程馆", gpa: true },
+    ],
+    '26_autumn': [
+    { id: 1, code: "GE6001", name: "学术写作、规范与伦理", className: "GE6001-03000-S01-PT", credit: 1, firstDate: "2026-12-26", teacher: "李红兵", capacity: 0, weeks: "15-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: true },
+    { id: 2, code: "GE6001", name: "学术写作、规范与伦理", className: "GE6001-03000-S02-PT", credit: 1, firstDate: "2026-12-27", teacher: "李红兵", capacity: 0, weeks: "15-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: true },
+    { id: 3, code: "GE6012", name: "学术报告与研讨会", className: "GE6012-03000-S01-PT", credit: 2, firstDate: "2026-09-19", teacher: "孔令和", capacity: 0, weeks: "1周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "新上院N100", gpa: true },
+    { id: 4, code: "GE6012", name: "学术报告与研讨会", className: "GE6012-03000-S01-PT", credit: 2, firstDate: "2026-09-19", teacher: "孔令和", capacity: 0, weeks: "11-17周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "新上院N100", gpa: true },
+    { id: 5, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S01-PT", credit: 3, firstDate: "2026-09-19", teacher: "周钢", capacity: 0, weeks: "1周", weekday: 6, startTime: "18:00", endTime: "21:10", room: "教一楼100", gpa: true },
+    { id: 6, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S01-PT", credit: 3, firstDate: "2026-09-19", teacher: "周钢", capacity: 0, weeks: "2,5-14周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼100", gpa: true },
+    { id: 7, code: "MEM6001", name: "定量分析：模型与方法", className: "MEM6001-03000-S02-PT", credit: 3, firstDate: "2026-09-27", teacher: "周钢", capacity: 0, weeks: "2,4-14周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: true },
+    { id: 8, code: "MEM6002", name: "工程管理导论", className: "MEM6002-03000-S01-PT", credit: 2, firstDate: "2026-09-19", teacher: "全林", capacity: 0, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼200", gpa: true },
+    { id: 9, code: "MEM6003", name: "工程经济学", className: "MEM6003-03000-S01-PT", credit: 2, firstDate: "2026-09-19", teacher: "殷翔", capacity: 0, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼300", gpa: true },
+    { id: 10, code: "MEM6003", name: "工程经济学", className: "MEM6003-03000-S02-PT", credit: 2, firstDate: "2026-09-19", teacher: "殷翔", capacity: 0, weeks: "1周", weekday: 6, startTime: "18:00", endTime: "21:10", room: "教一楼300", gpa: true },
+    { id: 11, code: "MEM6003", name: "工程经济学", className: "MEM6003-03000-S02-PT", credit: 2, firstDate: "2026-09-19", teacher: "殷翔", capacity: 0, weeks: "2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼300", gpa: true },
+    { id: 12, code: "MEM6003", name: "工程经济学", className: "MEM6003-03000-S03-PT", credit: 2, firstDate: "2026-11-29", teacher: "杨忠直", capacity: 0, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼300", gpa: true },
+    { id: 13, code: "MEM6005", name: "质量与可靠性管理", className: "MEM6005-03000-S01-PT", credit: 2, firstDate: "2026-11-28", teacher: "苗瑞", capacity: 0, weeks: "11-18周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼300", gpa: true },
+    { id: 14, code: "MEM6005", name: "质量与可靠性管理", className: "MEM6005-03000-S02-PT", credit: 2, firstDate: "2026-09-27", teacher: "苗瑞", capacity: 0, weeks: "2,4-10周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼300", gpa: true },
+    { id: 15, code: "MEM6006", name: "工程信息管理", className: "MEM6006-03000-S01-PT", credit: 2, firstDate: "2026-11-28", teacher: "刘雨桐", capacity: 0, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼300", gpa: true },
+    { id: 16, code: "MEM6006", name: "工程信息管理", className: "MEM6006-03000-S02-PT", credit: 2, firstDate: "2026-09-27", teacher: "蔡鸿明", capacity: 0, weeks: "2,4-10周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼300", gpa: true },
+    { id: 17, code: "MEM6301", name: "人力资源与沟通管理", className: "MEM6301-03000-S01-PT", credit: 2, firstDate: "2026-09-27", teacher: "陶祁", capacity: 0, weeks: "2,4-10周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼200", gpa: true },
+    { id: 18, code: "MEM6302", name: "领导力", className: "MEM6302-03000-S01-PT", credit: 2, firstDate: "2026-09-27", teacher: "张兴福", capacity: 0, weeks: "2,4-10周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼425", gpa: true },
+    { id: 19, code: "MEM6304", name: "库存与供应链管理", className: "MEM6304-03000-S01-PT", credit: 2, firstDate: "2026-11-29", teacher: "张文杰", capacity: 0, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: true },
+    { id: 20, code: "MEM6305", name: "风险管理与高效决策", className: "MEM6305-03000-S01-PT", credit: 2, firstDate: "2026-11-29", teacher: "王春香", capacity: 0, weeks: "11-18周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼200", gpa: true },
+    { id: 21, code: "MEM6308", name: "名企走访实践", className: "MEM6308-03000-S01-PT", credit: 1, firstDate: "2026-10-03", teacher: "孔令和", capacity: 0, weeks: "3-4周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "", gpa: true },
+    { id: 22, code: "MEM6308", name: "名企走访实践", className: "MEM6308-03000-S01-PT", credit: 1, firstDate: "2026-10-03", teacher: "孔令和", capacity: 0, weeks: "3-4周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "", gpa: true },
+    { id: 23, code: "MEM6309", name: "区块链与金融科技创新概论", className: "MEM6309-03000-S01-PT", credit: 2, firstDate: "2026-11-29", teacher: "范磊", capacity: 0, weeks: "11-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼300", gpa: true },
+    { id: 24, code: "MEM6310", name: "运营管理", className: "MEM6310-03000-S01-PT", credit: 2, firstDate: "2026-09-19", teacher: "邵晓峰", capacity: 0, weeks: "1周", weekday: 6, startTime: "18:00", endTime: "21:10", room: "教一楼425", gpa: true },
+    { id: 25, code: "MEM6310", name: "运营管理", className: "MEM6310-03000-S01-PT", credit: 2, firstDate: "2026-09-19", teacher: "邵晓峰", capacity: 0, weeks: "2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼425", gpa: true },
+    { id: 26, code: "MEM6311", name: "工程管理法律概论", className: "MEM6311-03000-S01-PT", credit: 2, firstDate: "2026-11-28", teacher: "王猛", capacity: 0, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼200", gpa: true },
+    { id: 27, code: "MEM8301", name: "大数据与互联网思维", className: "MEM8301-03000-S01-PT", credit: 2, firstDate: "2026-09-27", teacher: "吴晨涛", capacity: 0, weeks: "2,4-10周", weekday: 7, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: false },
+    { id: 28, code: "MEM8302", name: "物联网技术与发展趋势", className: "MEM8302-03000-S01-PT", credit: 2, firstDate: "2026-09-19", teacher: "俞嘉地", capacity: 0, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼425", gpa: false },
+    { id: 29, code: "MEM8303", name: "人工智能", className: "MEM8303-03000-S01-PT", credit: 2, firstDate: "2026-09-19", teacher: "张晓凡", capacity: 0, weeks: "1周", weekday: 6, startTime: "18:00", endTime: "21:10", room: "教一楼200", gpa: false },
+    { id: 30, code: "MEM8303", name: "人工智能", className: "MEM8303-03000-S01-PT", credit: 2, firstDate: "2026-09-19", teacher: "张晓凡", capacity: 0, weeks: "2,5-10周", weekday: 6, startTime: "13:30", endTime: "17:00", room: "教一楼200", gpa: false },
+    { id: 31, code: "MEM8304", name: "网络信息安全理论与技术", className: "MEM8304-03000-S01-PT", credit: 2, firstDate: "2026-11-28", teacher: "李生红", capacity: 0, weeks: "11-18周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼100", gpa: false },
+    { id: 32, code: "MEM8306", name: "新能源技术及应用", className: "MEM8306-03000-S01-PT", credit: 2, firstDate: "2026-09-19", teacher: "殳国华", capacity: 0, weeks: "1-2,5-10周", weekday: 6, startTime: "08:30", endTime: "12:00", room: "教一楼100", gpa: false },
+    { id: 33, code: "MEM8307", name: "大规模集成电路概述", className: "MEM8307-03000-S01-PT", credit: 2, firstDate: "2026-11-29", teacher: "毛志刚", capacity: 0, weeks: "11-18周", weekday: 7, startTime: "13:30", endTime: "17:00", room: "教一楼425", gpa: false },
     ]
 };
 
 /* 状态 */
 let state = {
-    currentTerm: '26_spring',
-	selectedIds: new Set([14, 15, 16]),
+    currentTerm: '26_autumn',
+	selectedIds: new Set(),
     termData: {}, // 缓存各学期的选择 { '25_autumn': [], '26_spring': [] }
 	currentWeekStart: null,
 	currentWeekNo: 1,
@@ -547,10 +583,7 @@ function renderCourseList() {
                     classGroups.get(c.className).push(c);
                 });
                 const representativeClass = classGroups.values().next().value || [];
-                const totalCredit = representativeClass.reduce((sum, c) => {
-                    const itemCredit = CODE_TO_CREDIT[c.code] ?? c.credit ?? 0;
-                    return sum + Number(itemCredit);
-                }, 0);
+                const totalCredit = sumUniqueCourseCredits(representativeClass);
                 
                 // 准备显示的数据
                 let displayData = {
@@ -590,7 +623,7 @@ function renderCourseList() {
                     // 星期/时间
                     const weekdays = [...new Set(courses.map(c => c.weekday))].sort();
                     displayData.weekday = weekdays.map(weekdayLabel).join(', ');
-                    displayData.time = `<span style="color:var(--gray-500);font-size:12px">可选 ${courses.length} 个班次</span>`;
+                    displayData.time = `<span style="color:var(--gray-500);font-size:12px">可选 ${classGroups.size} 个班次</span>`;
                 }
 
                 // 徽章
@@ -731,14 +764,33 @@ function getExistingCourseInfo() {
 	return normalizeExistingCourseInfo(state.existingCourseInfo || {});
 }
 
-function updateSelectedCredit() {
+function getCourseCredit(course) {
+	return Number(CODE_TO_CREDIT[course.code] ?? course.credit ?? 0) || 0;
+}
+
+function courseCreditKey(course) {
+	return `${course.code || ''}::${course.className || course.id}`;
+}
+
+function sumUniqueCourseCredits(courses) {
+	const seen = new Set();
 	let total = 0;
-	for (const id of state.selectedIds) {
-		const c = getCourses().find(x => x.id === id);
-		if (!c) continue;
-		const credit = CODE_TO_CREDIT[c.code] ?? c.credit ?? 0;
-		total += Number(credit) || 0;
+	for (const course of courses) {
+		const key = courseCreditKey(course);
+		if (seen.has(key)) continue;
+		seen.add(key);
+		total += getCourseCredit(course);
 	}
+	return total;
+}
+
+function countUniqueCourseSelections(courses) {
+	return new Set(courses.map(courseCreditKey)).size;
+}
+
+function updateSelectedCredit() {
+	const selectedCourses = getCourses().filter(c => state.selectedIds.has(c.id));
+	const total = sumUniqueCourseCredits(selectedCourses);
 	const existingInfo = getExistingCourseInfo();
 	const totalWithExisting = total + existingInfo.gpaCredits + existingInfo.nonGpaCredits;
 	if (creditTotalEl) creditTotalEl.textContent = String(totalWithExisting);
@@ -867,15 +919,8 @@ function getRequiredCourseProgress(groupKey) {
 }
 
 function calculateGPACredits() {
-	let gpaCredits = 0;
-	for (const id of state.selectedIds) {
-		const course = getCourses().find(c => c.id === id);
-		if (course && course.gpa === true) {
-			const credit = CODE_TO_CREDIT[course.code] ?? course.credit ?? 0;
-			gpaCredits += Number(credit) || 0;
-		}
-	}
-	return gpaCredits;
+	const selectedGpaCourses = getCourses().filter(c => state.selectedIds.has(c.id) && c.gpa === true);
+	return sumUniqueCourseCredits(selectedGpaCourses);
 }
 
 function calculateTotalConflicts() {
@@ -916,8 +961,9 @@ function calculateTotalConflicts() {
 /* 导入/导出功能 */
 function exportSelections() {
 	const selectedCourses = getCourses().filter(c => state.selectedIds.has(c.id));
-	const totalCredit = selectedCourses.reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
-	const gpaCredit = selectedCourses.filter(c => c.gpa === true).reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
+	const selectedCourseCount = countUniqueCourseSelections(selectedCourses);
+	const totalCredit = sumUniqueCourseCredits(selectedCourses);
+	const gpaCredit = sumUniqueCourseCredits(selectedCourses.filter(c => c.gpa === true));
 	const existingInfo = getExistingCourseInfo();
 	const totalCreditWithExisting = totalCredit + existingInfo.gpaCredits + existingInfo.nonGpaCredits;
 	const gpaCreditWithExisting = gpaCredit + existingInfo.gpaCredits;
@@ -943,7 +989,7 @@ function exportSelections() {
 	link.click();
 	document.body.removeChild(link);
 	
-	let message = `已导出 ${selectedCourses.length} 门课程，学分合计 ${totalCreditWithExisting}，其中 GPA 学分 ${gpaCreditWithExisting}`;
+	let message = `已导出 ${selectedCourseCount} 门课程，学分合计 ${totalCreditWithExisting}，其中 GPA 学分 ${gpaCreditWithExisting}`;
 	if (existingInfo.coreRequiredCount > 0 || existingInfo.gpaCredits > 0 || existingInfo.nonGpaCredits > 0) {
 		message += `（已修：核心必修 ${existingInfo.coreRequiredCount} 门，GPA ${existingInfo.gpaCredits}，非GPA ${existingInfo.nonGpaCredits}）`;
 	}
@@ -1095,6 +1141,7 @@ function exportICSCalendar(isSilent = false) {
 		if (!isSilent) alert('请先选择课程');
 		return;
 	}
+	const selectedCourseCount = countUniqueCourseSelections(selectedCourses);
 
     const icsContent = generateICSContent(selectedCourses);
     
@@ -1109,7 +1156,7 @@ function exportICSCalendar(isSilent = false) {
     
     if (isMobile) {
         downloadICSContent(icsContent);
-	    alert(`已导出 ${selectedCourses.length} 门课程到ICS日历文件`);
+	    alert(`已导出 ${selectedCourseCount} 门课程到ICS日历文件`);
     } else {
         showExportICSModal(icsContent);
     }
@@ -1186,12 +1233,13 @@ function importSelections(file) {
 			
 			// 计算实际导入的学分信息
 			const importedCourses = getCourses().filter(c => validIds.includes(c.id));
-			const actualTotalCredit = importedCourses.reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
-			const actualGpaCredit = importedCourses.filter(c => c.gpa === true).reduce((sum, c) => sum + (CODE_TO_CREDIT[c.code] ?? c.credit ?? 0), 0);
+			const importedCourseCount = countUniqueCourseSelections(importedCourses);
+			const actualTotalCredit = sumUniqueCourseCredits(importedCourses);
+			const actualGpaCredit = sumUniqueCourseCredits(importedCourses.filter(c => c.gpa === true));
 			const actualTotalCreditWithExisting = actualTotalCredit + importedExistingInfo.gpaCredits + importedExistingInfo.nonGpaCredits;
 			const actualGpaCreditWithExisting = actualGpaCredit + importedExistingInfo.gpaCredits;
 			
-			let message = `已导入 ${validIds.length} 门课程`;
+			let message = `已导入 ${importedCourseCount} 门课程`;
 			if (invalidCount > 0) {
 				message += `，${invalidCount} 门课程不存在已跳过`;
 			}
@@ -1249,14 +1297,8 @@ function downloadScheduleImage() {
 	
 	// 绘制统计信息
 	const totalCredits = (() => {
-		let total = 0;
-		for (const id of state.selectedIds) {
-			const c = getCourses().find(x => x.id === id);
-			if (!c) continue;
-			const credit = CODE_TO_CREDIT[c.code] ?? c.credit ?? 0;
-			total += Number(credit) || 0;
-		}
-		return total;
+		const selectedCourses = getCourses().filter(c => state.selectedIds.has(c.id));
+		return sumUniqueCourseCredits(selectedCourses);
 	})();
 	const existingInfo = getExistingCourseInfo();
 	const gpaCredits = calculateGPACredits() + existingInfo.gpaCredits;
